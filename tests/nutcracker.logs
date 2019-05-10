@@ -1,0 +1,26 @@
+[2019-04-27 09:48:44.504] [nc.cpp:373] pool size:1
+[2019-04-27 09:48:44.504] [nc_core.cpp:76] run into NcInstance:createContext 
+[2019-04-27 09:48:44.504] [nc_server.h:102] info.family : 2
+[2019-04-27 09:48:44.504] [nc_core.cpp:69] max fds 1024 max client conns 992 max server conns 0
+[2019-04-27 09:48:44.504] [nc_connection.h:70] NcConn reset
+[2019-04-27 09:48:44.504] [nc_proxy.cpp:14] run into NcProxyConn:ref 
+[2019-04-27 09:48:44.504] [nc_proxy.cpp:23] ref conn 0x7fffbf2c5910 owner 0x7fffbf2c57c0 into pool 631487648
+[2019-04-27 09:48:44.504] [nc_proxy.cpp:116] run into NcProxyConn:listen 
+[2019-04-27 09:48:44.504] [nc_proxy.cpp:121] m_family_ : 2
+[2019-04-27 09:48:44.504] [nc_proxy.cpp:91] run into NcProxyConn:reuse 
+[2019-04-27 09:48:44.803] [nc_proxy.cpp:159] backlog : 512
+[2019-04-27 09:48:44.803] [nc_proxy.cpp:176] ctx : 0x7fffbf2c3370, evb : 0x458
+[2019-04-27 09:48:44.803] [nc_signal.h:46] signal 11 received
+[2019-04-27 09:49:50.354] [nc.cpp:374] pool size:1
+[2019-04-27 09:49:50.354] [nc_core.cpp:76] run into NcInstance:createContext 
+[2019-04-27 09:49:50.355] [nc_server.h:102] info.family : 2
+[2019-04-27 09:49:50.355] [nc_core.cpp:69] max fds 1024 max client conns 992 max server conns 0
+[2019-04-27 09:49:50.355] [nc_connection.h:70] NcConn reset
+[2019-04-27 09:49:50.355] [nc_proxy.cpp:14] run into NcProxyConn:ref 
+[2019-04-27 09:49:50.355] [nc_proxy.cpp:23] ref conn 0x7fffc79d3910 owner 0x7fffc79d37c0 into pool 526630048
+[2019-04-27 09:49:50.355] [nc_proxy.cpp:116] run into NcProxyConn:listen 
+[2019-04-27 09:49:50.355] [nc_proxy.cpp:121] m_family_ : 2
+[2019-04-27 09:49:50.355] [nc_proxy.cpp:91] run into NcProxyConn:reuse 
+[2019-04-27 09:49:50.355] [nc_proxy.cpp:159] backlog : 512
+[2019-04-27 09:49:50.355] [nc_proxy.cpp:176] ctx : 0x7fffc79d1370, evb : 0x458
+[2019-04-27 09:49:50.355] [nc_signal.h:46] signal 11 received

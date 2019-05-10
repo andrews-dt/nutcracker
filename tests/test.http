@@ -1,0 +1,8 @@
+####
+GET http://127.0.0.1:22121/
+
+
+###
+POST https://www.zqsiwei.com/v1/infomationApi
+
+{"base":{},"param":{"index":"tuicool07","pageNo":1,"pageSize":10}}
