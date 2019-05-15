@@ -129,6 +129,8 @@ public:
     }
 
     // 处理request
+    bool requestDone(NcConn* conn);
+
     bool requestFilter(NcConn* conn);
 
     void requestForward(NcConn* conn);

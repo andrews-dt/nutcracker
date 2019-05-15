@@ -341,7 +341,7 @@ NcMsgBase* NcServerConn::sendNext()
     }
 
     LOG_DEBUG("send next req %" PRIu64 " len %" PRIu32 " type %d on "
-              "s %d", nmsg->m_id_, nmsg->m_mlen_, nmsg->m_type_, m_sd_);
+        "s %d", nmsg->m_id_, nmsg->m_mlen_, nmsg->m_type_, m_sd_);
 
     return nmsg;
 }
@@ -415,6 +415,8 @@ NcMsgBase* NcServerConn::recvNext(bool alloc)
 
 void NcServerConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
 {
+    FUNCTION_INTO(NcServerConn);
+    
     m_rmsg_ = rmsg;
     NcMsg *msg = (NcMsg*)cmsg;
     if (msg->responseFilter(this)) 

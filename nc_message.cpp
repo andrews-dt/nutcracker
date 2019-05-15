@@ -88,7 +88,7 @@ rstatus_t NcMsg::parse(NcConn* conn)
     }
 
     // TODO : 测试，默认解析完成
-    conn->m_eof_ = 1;
+    // conn->m_eof_ = 1;
     m_result_ = kMSG_PARSE_OK;
     NcMbuf *mbuf = m_mbuf_queue_.back();
     pos = mbuf->getLast();
@@ -195,6 +195,11 @@ rstatus_t NcMsg::repairDone(NcConn* conn)
     pos = nbuf->getPos();
 
     return NC_OK;
+}
+
+bool NcMsg::requestDone(NcConn* conn)
+{
+    return true;
 }
 
 bool NcMsg::requestFilter(NcConn* conn)
@@ -328,7 +333,7 @@ rstatus_t NcMsg::requestMakeReply(NcConn* conn)
 
 bool NcMsg::responseFilter(NcConn* conn)
 {
-    FUNCTION_INTO(NcMSg);
+    FUNCTION_INTO(NcMsg);
 
     if (empty()) 
     {
@@ -372,7 +377,10 @@ bool NcMsg::responseFilter(NcConn* conn)
 
 void NcMsg::responseForward(NcConn* conn)
 {
-    FUNCTION_INTO(NcMSg);
+    FUNCTION_INTO(NcMsg);
+
+    NcContext *ctx = (NcContext*)(conn->getContext());
+    ASSERT(ctx != NULL);
 
     uint32_t msgsize = m_mlen_;
 
@@ -384,6 +392,18 @@ void NcMsg::responseForward(NcConn* conn)
     /* establish msg <-> pmsg (response <-> request) link */
     pmsg->m_peer_ = this;
     m_peer_ = pmsg;
+
+    NcConn* c_conn = (NcConn*)(pmsg->data);
+    LOG_DEBUG("c_conn : %p, m_sd_ : %d", c_conn, c_conn->m_sd_);
+    NcMsg* msg = (NcMsg*)(c_conn->m_omsg_q_.front());
+    if (msg->requestDone(c_conn)) 
+    {
+        rstatus_t status = (ctx->getEvb()).addOutput(c_conn);
+        if (status != NC_OK) 
+        {
+            c_conn->m_err_ = errno;
+        }
+    }
 }
 
 void NcMsg::freeMbuf(NcContext *ctx)

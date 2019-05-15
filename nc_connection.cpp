@@ -173,15 +173,11 @@ rstatus_t NcConn::recvChain(NcMsgBase *_msg)
     FUNCTION_INTO(NcConn);
 
     NcContext *ctx = (NcContext*)getContext();
-    if (ctx == NULL)
-    {
-        LOG_ERROR("ctx is NULL");
-        return NC_ERROR;
-    }
+    ASSERT(ctx != NULL);
 
     NcMsg *msg = (NcMsg*)_msg;
     NcQueue<NcMbuf*> *mbuf_queue = msg->getMbufQueue();
-    NcMbuf *mbuf = mbuf_queue->front();
+    NcMbuf *mbuf = mbuf_queue->back();
     if (mbuf == NULL || mbuf->full()) 
     {
         mbuf = (ctx->mbuf_pool).alloc();

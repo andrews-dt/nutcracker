@@ -289,7 +289,7 @@ NcMsgBase* NcClientConn::sendNext()
     // TODO : 需要特殊处理
     m_smsg_ = msg;
 
-    LOG_DEBUG("send next rsp %" PRIu64 " on c %d", msg->m_id_, m_sd_);
+    LOG_DEBUG("send next rsp on c %d", m_sd_);
 
     return msg;
 }
