@@ -122,7 +122,11 @@ public:
     
     rstatus_t repairDone(NcConn* conn);
 
-    rstatus_t reply();
+    // TODO : 默认OK
+    rstatus_t reply()
+    {
+        return NC_OK;
+    }
 
     // 处理request
     bool requestFilter(NcConn* conn);

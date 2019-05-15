@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <unistd.h>
+#include <assert.h>
 
 #define LLOG_EMERG   0      /* system in unusable */
 #define LLOG_ALERT   1      /* action must be taken immediately */
@@ -107,8 +108,10 @@ private:
     }                                                                       \
 } while (0)
 
-#define FUNCTION_INTO(cls)   LOG_DEBUG("\033[32m run into %s:%s \033[0m", #cls, __FUNCTION__)
+#define FUNCTION_INTO(cls)   LOG_DEBUG("\033[32mrun into %s:%s \033[0m", #cls, __FUNCTION__)
 
-#define FUNCTION_OUT(cls)    LOG_DEBUG("\033[34m run out %s:%s \033[0m", #cls, __FUNCTION__)
+#define FUNCTION_OUT(cls)    LOG_DEBUG("\033[34mrun out %s:%s \033[0m", #cls, __FUNCTION__)
+
+#define ASSERT(exp)       assert((exp))
 
 #endif

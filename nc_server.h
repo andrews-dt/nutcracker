@@ -257,22 +257,13 @@ public:
 
     rstatus_t connect(); 
 
-    virtual NcMsgBase* recvNext(bool alloc)
-    {
-        return NULL;
-    }
+    virtual NcMsgBase* recvNext(bool alloc);
 
-    virtual void recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
-    {
-        return ;
-    }
+    virtual void recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg);
 
     virtual NcMsgBase* sendNext();
 
-    virtual void sendDone(NcMsgBase *msg)
-    {
-        return ;
-    }
+    virtual void sendDone(NcMsgBase *msg);
 
     virtual NcContext* getContext();
 };

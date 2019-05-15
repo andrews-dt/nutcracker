@@ -87,9 +87,11 @@ rstatus_t NcMsg::parse(NcConn* conn)
         return NC_OK;
     }
 
-    // TODO : 测试
+    // TODO : 测试，默认解析完成
     conn->m_eof_ = 1;
     m_result_ = kMSG_PARSE_OK;
+    NcMbuf *mbuf = m_mbuf_queue_.back();
+    pos = mbuf->getLast();
 
     switch (m_result_)
     {
@@ -121,6 +123,7 @@ rstatus_t NcMsg::parseDone(NcConn* conn)
     FUNCTION_INTO(NcMsg);
 
     NcContext *ctx = (NcContext*)(conn->getContext());
+    ASSERT(ctx != NULL);
     NcMbuf *mbuf = m_mbuf_queue_.back();
     if (mbuf == NULL)
     {
@@ -135,7 +138,6 @@ rstatus_t NcMsg::parseDone(NcConn* conn)
     }
 
     LOG_DEBUG("split mbuf, pos : %p, mbuf length : %d", pos, mbuf->length());
-
     /*
      * Input mbuf has un-parsed data. Split mbuf of the current message msg
      * into (mbuf, nbuf), where mbuf is the portion of the message that has
@@ -161,15 +163,13 @@ rstatus_t NcMsg::parseDone(NcConn* conn)
 
     nmsg->m_mbuf_queue_.push(nbuf);
     nmsg->pos = nbuf->getPos();
-
     /* update length of current (msg) and new message (nmsg) */
     nmsg->m_mlen_ = nbuf->length();
     m_mlen_ -= nmsg->m_mlen_;
     
     LOG_DEBUG("len : %d", m_mlen_);
-    
-    // TODO : 特殊处理
-    conn->recvDone(nmsg, this);
+
+    conn->recvDone(this, nmsg);
 
     return NC_OK;
 }
@@ -224,7 +224,6 @@ bool NcMsg::requestFilter(NcConn* conn)
 
         conn->m_eof_ = 1;
         conn->m_recv_ready_ = 0;
-
         conn->freeMsg(this);
         return true;
     }
@@ -239,14 +238,13 @@ void NcMsg::requestForward(NcConn* conn)
     FUNCTION_INTO(NcMsg);
 
     NcContext *ctx = (NcContext*)(conn->getContext());
-    /* enqueue message (request) into client outq, if response is expected */
     if (!m_noreply_) 
     {
         conn->enqueueOutput((NcMsgBase*)this);
     }
 
     NcServerPool *pool = (NcServerPool*)(conn->m_owner_);
-
+    ASSERT(pool != NULL);
     // TODO : 需要特殊处理
     NcConn *s_conn = pool->getConn(NULL, 0);
     if (s_conn == NULL) 
@@ -254,9 +252,7 @@ void NcMsg::requestForward(NcConn* conn)
         requestForwardError(conn);
         return ;
     }
-
     LOG_DEBUG("s_conn size : %d, mlen : %d", s_conn->m_imsg_q_.size(), m_mlen_);
-
     /* enqueue the message (request) into server inq */
     if (s_conn->m_imsg_q_.empty()) 
     {
@@ -313,6 +309,7 @@ rstatus_t NcMsg::requestMakeReply(NcConn* conn)
     FUNCTION_INTO(NcMsg);
 
     NcContext *ctx = (NcContext*)(conn->getContext());
+    ASSERT(ctx != NULL);
 
     NcMsg *rsp = (NcMsg*)(ctx->msg_pool).alloc();
     if (rsp == NULL) 
@@ -329,12 +326,69 @@ rstatus_t NcMsg::requestMakeReply(NcConn* conn)
     return NC_OK;
 }
 
+bool NcMsg::responseFilter(NcConn* conn)
+{
+    FUNCTION_INTO(NcMSg);
+
+    if (empty()) 
+    {
+        LOG_DEBUG("filter empty rsp %" PRIu64 " on s %d", m_id_, conn->m_sd_);
+        conn->freeMsg(this, false);
+        return true;
+    }
+
+    NcMsg *pmsg = (NcMsg*)(conn->m_omsg_q_.front());
+    if (pmsg == NULL) 
+    {
+        LOG_DEBUG("filter stray rsp %" PRIu64 " len %" PRIu32 " on s %d",
+            m_id_, m_mlen_, conn->m_sd_);
+        conn->freeMsg(this, false);
+        /*
+         * Memcached server can respond with an error response before it has
+         * received the entire request. This is most commonly seen for set
+         * requests that exceed item_size_max. IMO, this behavior of memcached
+         * is incorrect. The right behavior for update requests that are over
+         * item_size_max would be to either:
+         * - close the connection Or,
+         * - read the entire item_size_max data and then send CLIENT_ERROR
+         *
+         * We handle this stray packet scenario in nutcracker by closing the
+         * server connection which would end up sending SERVER_ERROR to all
+         * clients that have requests pending on this server connection. The
+         * fix is aggressive, but not doing so would lead to clients getting
+         * out of sync with the server and as a result clients end up getting
+         * responses that don't correspond to the right request.
+         *
+         * See: https://github.com/twitter/twemproxy/issues/149
+         */
+        m_err_ = EINVAL;
+        m_done_ = 1;
+
+        return true;
+    }
+
+    return false;
+}
+
+void NcMsg::responseForward(NcConn* conn)
+{
+    FUNCTION_INTO(NcMSg);
+
+    uint32_t msgsize = m_mlen_;
+
+    /* dequeue peer message (request) from server */
+    NcMsg *pmsg = (NcMsg*)(conn->m_omsg_q_.front());
+    conn->dequeueOutput(pmsg);
+    pmsg->m_done_ = 1;
+
+    /* establish msg <-> pmsg (response <-> request) link */
+    pmsg->m_peer_ = this;
+    m_peer_ = pmsg;
+}
+
 void NcMsg::freeMbuf(NcContext *ctx)
 {
-    if (ctx == NULL)
-    {
-        return ;
-    }
+    ASSERT(ctx != NULL);
     
     NcMbuf *mbuf = NULL;
     while (!m_mbuf_queue_.empty())

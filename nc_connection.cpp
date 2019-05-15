@@ -216,7 +216,7 @@ rstatus_t NcConn::recvChain(NcMsgBase *_msg)
     NcMsg *nmsg = NULL;
     for (;;) 
     {
-        rstatus_t status = msg->parse(ctx, this);
+        rstatus_t status = msg->parse(this);
         LOG_DEBUG("status : %d", status);
         if (status != NC_OK)
         {
@@ -246,11 +246,9 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
     ssize_t n; 
 
     NcContext *ctx = (NcContext*)getContext();
-    if (ctx == NULL)
-    {
-        LOG_ERROR("ctx is NULL");
-        return NC_ERROR;
-    }
+    ASSERT(ctx != NULL);
+    
+    LOG_DEBUG("msg : %p", msg);
 
     NcMsg *cmsg = (NcMsg*)msg;
     NcQueue<NcMbuf*> *mbuf_queue = cmsg->getMbufQueue();
@@ -261,8 +259,10 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
         NcMbuf *mbuf = mbuf_queue->front();
         NcQueue<NcMbuf*>::ConstIterator iter = mbuf_queue->find(mbuf);
         LOG_DEBUG("mbuf : %p, size : %d", mbuf, mbuf_queue->size());
+        LOG_DEBUG("iter : %p, end : %p, nsend < limit : %d", iter, mbuf_queue->end(), nsend < limit);
         while (iter != mbuf_queue->end() && nsend < limit)
         {
+            LOG_DEBUG("mbuf_queue size : %d", mbuf_queue->size());
             if ((*iter)->empty())
             {
                 iter++;
@@ -287,7 +287,7 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
         LOG_DEBUG("iov_n : %d, NC_IOV_MAX : %d, nsend : %d, limit : %ld", 
             iov_n, NC_IOV_MAX, nsend, limit);
 
-        if (iov_n > NC_IOV_MAX || nsend > limit)
+        if (iov_n >= NC_IOV_MAX || nsend > limit)
         {
             break;
         }
@@ -314,8 +314,9 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
     nsent = n > 0 ? (size_t)n : 0;
     NcMsg *nmsg = send_msgq.front();
     NcQueue<NcMsg*>::ConstIterator iter = send_msgq.find(nmsg);
-    while (iter != send_msgq.end())
+    while (!send_msgq.empty() && iter != send_msgq.end())
     {
+        LOG_DEBUG("send_msgq size : %d, *iter : %p", send_msgq.size(), *iter);
         nmsg = *iter;
         send_msgq.remove(*iter++);
 
@@ -325,15 +326,18 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
             {
                 this->sendDone(nmsg);
             }
-
             continue;
         }
 
         NcQueue<NcMbuf*> *_mbuf_queue = nmsg->getMbufQueue();
-        NcMbuf *mbuf = _mbuf_queue->front();
-        NcQueue<NcMbuf*>::ConstIterator iter1 = _mbuf_queue->find(mbuf);
-        while (iter1 != mbuf_queue->end())
+        NcMbuf *mbuf = NULL;
+        NcQueue<NcMbuf*>::ConstIterator iter1 = _mbuf_queue->begin();
+        while (iter1 != _mbuf_queue->end())
         {
+            mbuf = *iter1;
+
+            LOG_DEBUG("_mbuf_queue size : %d", _mbuf_queue->size());
+
             if ((*iter1)->empty())
             {
                 iter1++;
@@ -353,7 +357,9 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
             iter1++;
         }
 
-        if (mbuf == NULL)
+        LOG_DEBUG("mbuf : %p", mbuf);
+
+        if (iter1 == _mbuf_queue->end() || mbuf == NULL)
         {
             this->sendDone(nmsg);
         }

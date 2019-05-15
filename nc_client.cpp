@@ -68,11 +68,7 @@ void NcClientConn::close()
     FUNCTION_INTO(NcClientConn);
 
     NcContext *ctx = (NcContext*)getContext();
-    if (ctx == NULL)
-    {
-        LOG_ERROR("ctx is NULL");
-        return ;
-    }
+    ASSERT(ctx != NULL);
 
     if (m_sd_ < 0)
     {
@@ -134,11 +130,7 @@ NcMsgBase* NcClientConn::recvNext(bool alloc)
     FUNCTION_INTO(NcClientConn);
 
     NcContext *ctx = (NcContext*)getContext();
-    if (ctx == NULL)
-    {
-        LOG_ERROR("ctx is NULL");
-        return NULL;
-    }
+    ASSERT(ctx != NULL);
 
     NcMsg *msg = (NcMsg*)m_rmsg_;
     if (m_eof_) 
@@ -184,13 +176,9 @@ NcMsgBase* NcClientConn::recvNext(bool alloc)
     if (msg == NULL)
     {
         m_err_ = errno;
+        return NULL;
     }
-
-    if (msg != NULL)
-    {
-        m_rmsg_ = (NcMsg*)msg;
-    }
-
+    m_rmsg_ = (NcMsg*)msg;
     // 设置所属数据
     msg->setData(this);
     return (NcMsgBase*)msg;
@@ -202,11 +190,8 @@ void NcClientConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
     NcQueue<NcMsg*> frag_msgq;
 
     NcContext *ctx = (NcContext*)getContext();
-    if (ctx == NULL || cmsg == NULL)
-    {
-        LOG_ERROR("ctx or cmsg is NULL");
-        return ;
-    }
+    ASSERT(ctx != NULL);
+    ASSERT(cmsg != NULL);
 
     m_rmsg_ = rmsg;
     if (((NcMsg*)cmsg)->requestFilter(this))

@@ -291,21 +291,19 @@ NcMsgBase* NcServerConn::sendNext()
     FUNCTION_INTO(NcServerConn);
 
     NcServer *server = (NcServer*)m_owner_;
-    if (server == NULL)
-    {
-        LOG_ERROR("server is NULL");
-        return NULL;
-    }
+    ASSERT(server != NULL);
 
     NcContext *ctx = server->getContext();
-    if (ctx == NULL)
+    ASSERT(ctx != NULL);
+
+    if (m_connecting_)
     {
-        LOG_ERROR("ctx is NULL");
-        return NULL;
+        connect();
     }
 
     rstatus_t status;
-    NcMsg *nmsg = (NcMsg*)(m_imsg_q_.front());
+    NcQueue<NcMsgBase*>::ConstIterator iter = m_imsg_q_.begin();
+    NcMsg *nmsg = (NcMsg*)(*iter);
 
     LOG_DEBUG("nmsg : %p", nmsg);
 
@@ -323,9 +321,18 @@ NcMsgBase* NcServerConn::sendNext()
     NcMsg *msg = (NcMsg*)m_smsg_;
     if (msg != NULL)
     {
-        nmsg = NULL;
-        // TODO:需要特殊处理
+        iter++;
+        if (iter == m_imsg_q_.end())
+        {
+            nmsg = NULL;
+        }
+        else
+        {
+            nmsg = (NcMsg*)(*iter);
+        }
     }
+
+    LOG_DEBUG("nmsg : %p", nmsg);
 
     m_smsg_ = nmsg;
     if (nmsg == NULL)
@@ -339,17 +346,84 @@ NcMsgBase* NcServerConn::sendNext()
     return nmsg;
 }
 
-// void NcServerConn::sendDone(NcMsgBase *msg)
-// {
-//     LOG_DEBUG("send done rsp %" PRIu64 " on c %d", m_id_, m_sd_);
+void NcServerConn::sendDone(NcMsgBase *msg)
+{
+    FUNCTION_INTO(NcServerConn);
 
-//     NcMsg *pmsg = msg->peer;
+    LOG_DEBUG("send done rsp %" PRIu64 " on c %d", msg->m_id_, m_sd_);
 
-//     /* dequeue request from client outq */
-//     this->dequeueOutput(pmsg);
+    /* dequeue the message (request) from server inq */
+    this->dequeueInput(msg);
 
-//     // 回收msg
-// }
+    /*
+     * noreply request instructs the server not to send any response. So,
+     * enqueue message (request) in server outq, if response is expected.
+     * Otherwise, free the noreply request
+     */
+    if (!msg->m_noreply_) 
+    {
+        this->enqueueOutput(msg);
+    } 
+    else
+    {
+        freeMsg(msg);
+    }
+}
+
+NcMsgBase* NcServerConn::recvNext(bool alloc)
+{
+    FUNCTION_INTO(NcServerConn);
+
+    NcContext *ctx = (NcContext*)getContext();
+    ASSERT(ctx != NULL);
+
+    NcMsg *msg = (NcMsg*)m_rmsg_;
+    if (m_eof_)
+    {
+        if (msg != NULL)
+        {
+            m_rmsg_ = NULL;
+            LOG_ERROR("eof s %d discarding incomplete rsp %" PRIu64 " len "
+                "%" PRIu32 "", m_sd_, msg->m_id_, msg->m_mlen_);
+            freeMsg(msg, false);   
+        }
+
+        m_done_ = 1;
+        LOG_ERROR("s %d active %d is done", m_sd_, active());
+        return NULL;
+    }
+
+    if (msg != NULL) 
+    {
+        return msg;
+    }
+
+    if (!alloc) 
+    {
+        return NULL;
+    }
+
+    // 分配msg
+    msg = (NcMsg*)(ctx->msg_pool).alloc();
+    if (msg != NULL) 
+    {
+        m_rmsg_ = msg;
+    }
+
+    return msg;
+}
+
+void NcServerConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
+{
+    m_rmsg_ = rmsg;
+    NcMsg *msg = (NcMsg*)cmsg;
+    if (msg->responseFilter(this)) 
+    {
+        return ;
+    }
+
+    msg->responseForward(this);
+}
 
 NcContext* NcServerConn::getContext()
 {
