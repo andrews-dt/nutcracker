@@ -73,48 +73,20 @@
 #include <nc_signal.h>
 #include <nc_conf.h>
 
-typedef enum
-{
-    kMSG_UNKOWN,
-    kMSG_REDIS,
-    kMSG_MEMCACHED,
-} NcMsgType;
-
 class NcInstance;
 class NcContext;
 class NcMsgBase;
 
-class NcMbufAlloc
+typedef enum
 {
-public:
-    NcMbuf* alloc(void *args);
-};
+    kPROTOCOL_UNKOWN,
+    kPROTOCOL_REDIS,
+    kPROTOCOL_MEMCACHED,
+    kPROTOCOL_HTTP,
+    kPROTOCOL_MYSQL,
+} NcProtocolType;
 
-class NcMsgAlloc
-{
-public:
-    NcMsgBase* alloc(void *args);
-};
-
-class NcClientConnAlloc
-{
-public:
-    NcConnBase* alloc(void *args);
-};
-
-class NcServerConnAlloc
-{
-public:
-    NcConnBase* alloc(void *args);
-};
-
-class NcProxyConnAlloc
-{
-public:
-    NcConnBase* alloc(void *args);
-};
-
-template<class T, class Alloc>
+template<class T>
 class NcObjectPool
 {
 public:
@@ -137,18 +109,20 @@ public:
         }
     }
 
+    template<class RT>
     inline T alloc(void *args = NULL)
     {
-        Alloc ac;
-
         T o = NULL;
         if (!m_queue_.empty())
         {
             o = m_queue_.front();
             m_queue_.pop();
         }
+        else
+        {
+            o = new RT();
+        }
 
-        o = ac.alloc(args);
         m_current_ = o;
         return o;
     }
@@ -206,6 +180,8 @@ public:
 
     NcEventBase     evb;                        /* event base */
     NcRBTree        tmo_rbe;                    // 红黑树
+
+    int             timeout;                    // 超时的timeout
 };
 
 class NcContext 
@@ -241,22 +217,21 @@ public:
     }
 
 public:
-    NcObjectPool<NcMbuf*, NcMbufAlloc>              mbuf_pool;
-    NcObjectPool<NcConnBase*, NcClientConnAlloc>    c_pool;
-    NcObjectPool<NcConnBase*, NcServerConnAlloc>    s_pool;
-    NcObjectPool<NcConnBase*, NcProxyConnAlloc>     p_pool;
-    NcObjectPool<NcMsgBase*, NcMsgAlloc>            msg_pool;
+    NcObjectPool<NcMbuf*>           mbuf_pool;
+    NcObjectPool<NcConnBase*>       c_pool, s_pool, p_pool;
+    NcObjectPool<NcMsgBase*>        msg_pool;
 
-    uint32_t        id;          /* unique context id */
-    int             max_timeout; /* max timeout in msec */
-    int             timeout;     /* timeout in msec */
+    uint32_t        id;             /* unique context id */
+    int             max_timeout;    /* max timeout in msec */
+    int             timeout;        /* timeout in msec */
 
-    uint32_t        max_nfd;     /* max # files */
-    uint32_t        max_ncconn;  /* max # client connections */
-    uint32_t        max_nsconn;  /* max # server connections */
+    uint32_t        max_nfd;        /* max # files */
+    uint32_t        max_ncconn;     /* max # client connections */
+    uint32_t        max_nsconn;     /* max # server connections */
 
     void            *server_pool;
     NcInstance      *instance;
+    NcProtocolType  protocol_type; // 协议类型
 };
 
 // 继承rbtree的节点信息
@@ -267,12 +242,19 @@ public:
     {
         rbnode::reset();
 
+        m_id_ = NcUtil::uniqNextId();
         m_peer_ = NULL;
         m_mlen_ = 0; 
         m_start_ts_ = NcUtil::nc_usec_now();
+        pos = NULL;
 
         m_err_ = 0;
-        m_type_ = kMSG_UNKOWN;
+        m_type_ = kPROTOCOL_UNKOWN;
+    }
+
+    inline void setProtocolType(NcProtocolType type)
+    {
+        m_type_ = type;
     }
 
     inline void setPos(uint8_t *_pos)
@@ -308,7 +290,7 @@ public:
     unsigned        m_done_;            /* done? */
     unsigned        m_fdone_;           /* all fragments are done? */
     unsigned        m_swallow_;         /* swallow response? */
-    NcMsgType       m_type_;            // 类型
+    NcProtocolType  m_type_;            // 类型
 };
 
 #endif

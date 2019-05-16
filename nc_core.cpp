@@ -6,38 +6,9 @@
 #include <nc_client.h>
 #include <nc_proxy.h>
 
-NcMbuf* NcMbufAlloc::alloc(void *args)
-{
-    return new NcMbuf(NcUtil::ncMbufChunkSize());
-}
-
-NcMsgBase* NcMsgAlloc::alloc(void *args)
-{
-    NcMsgBase *msg = new NcMsg();
-    return msg;
-}
-
-NcConnBase* NcClientConnAlloc::alloc(void *args)
-{
-    NcConn *conn = new NcClientConn();
-    return conn;
-}
-
-NcConnBase* NcServerConnAlloc::alloc(void *args)
-{
-    NcConn *conn = new NcServerConn();
-    return conn;
-}
-
-NcConnBase* NcProxyConnAlloc::alloc(void *args)
-{
-    NcConn *conn = new NcProxyConn();
-    return conn;
-}
-
 rstatus_t NcContext::createProxyConn()
 {
-    NcProxyConn *conn = new NcProxyConn();
+    NcProxyConn *conn = (NcProxyConn*)p_pool.alloc<NcProxyConn>();
     conn->ref(server_pool);
     rstatus_t status = conn->listen();
 
@@ -49,6 +20,7 @@ rstatus_t NcContext::createProxyConn()
     }
 
     NcServerPool *pool = (NcServerPool*)server_pool;
+    ASSERT(pool != NULL);
     LOG_DEBUG("conn %d listening on '%s' and '%s'", conn->m_sd_, 
               pool->addrstr.c_str(), pool->name.c_str());
 
@@ -58,10 +30,11 @@ rstatus_t NcContext::createProxyConn()
 rstatus_t NcContext::createServerConn()
 {
     NcServerPool *pool = (NcServerPool*)server_pool;
+    ASSERT(pool != NULL);
 
     for (int i = 0; i < pool->server.size(); i++)
     {
-        NcServerConn *conn = new NcServerConn();
+        NcServerConn *conn = (NcServerConn*)p_pool.alloc<NcServerConn>();
         conn->ref((pool->server)[i]);
 
         rstatus_t status = conn->connect();
@@ -91,9 +64,9 @@ rstatus_t NcContext::calcConnections()
     max_nfd = (uint32_t)limit.rlim_cur;
     max_ncconn = max_nfd - max_nsconn - RESERVED_FDS;
     LOG_DEBUG("max fds %" PRIu32 " max client conns %" PRIu32 " "
-            "max server conns %" PRIu32 "", 
-            max_nfd, max_ncconn, max_nsconn);
-            
+        "max server conns %" PRIu32 "", 
+        max_nfd, max_ncconn, max_nsconn);
+        
     return NC_OK;
 }
 
@@ -149,7 +122,9 @@ rstatus_t NcInstance::loop()
 {
     FUNCTION_INTO(NcInstance);
 
-    int nsd = evb.wait(-1);
+    // TODO : 
+    timeout = 10000;
+    int nsd = evb.wait(timeout);
     LOG_DEBUG("nsd : %d", nsd);
     if (nsd < 0) 
     {
@@ -164,7 +139,8 @@ rstatus_t NcInstance::loop()
         NcMsgBase *msg = (NcMsgBase*)node;
         if (msg == NULL) 
         {
-            // ctx->timeout = ctx->max_timeout;
+            // TODO :
+            // timeout = ctx->max_timeout;
             break;
         }
 
@@ -181,7 +157,8 @@ rstatus_t NcInstance::loop()
         if (now < then) 
         {
             int delta = (int)(then - now);
-            // ctx->timeout = MIN(delta, ctx->max_timeout);
+            // TODO :
+            // timeout = MIN(delta, ctx->max_timeout);
             break;
         }
 

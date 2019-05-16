@@ -43,11 +43,12 @@
 class NcMbuf
 {
 public:
-    NcMbuf(uint32_t size) : m_chunk_size_(size)
+    NcMbuf()
     { 
-        m_data_ = (uint8_t *)nc_alloc(size);
+        m_chunk_size_ = NcUtil::ncMbufChunkSize();
+        m_data_ = (uint8_t *)nc_alloc(m_chunk_size_);
         m_start_ = m_data_;
-        m_end_ = m_data_ + (size - MBUF_HSIZE);
+        m_end_ = m_data_ + (m_chunk_size_ - MBUF_HSIZE);
         m_pos_ = m_start_;
         m_last_ = m_start_;
         m_magic_ = MBUF_MAGIC;
@@ -163,7 +164,7 @@ public:
     {
         FUNCTION_INTO(NcMbuf); 
 
-        NcMbuf *nbuf = new NcMbuf(m_chunk_size_);
+        NcMbuf *nbuf = new NcMbuf();
         if (nbuf == NULL) 
         {
             LOG_DEBUG("nbuf is NULL, chunk_size : %d", m_chunk_size_);

@@ -7,7 +7,7 @@ inline NcMbuf* NcMsg::ensureMbuf(NcContext *ctx, size_t len)
     NcMbuf *buf = m_mbuf_queue_.front();
     if (buf == NULL || buf->size() >= len)
     {
-        buf = (ctx->mbuf_pool).alloc();
+        buf = (ctx->mbuf_pool).alloc<NcMbuf>();
     }
     
     if (buf != NULL)
@@ -35,7 +35,7 @@ rstatus_t NcMsg::append(NcContext *ctx, uint8_t *pos, size_t n)
 
 rstatus_t NcMsg::preAppend(NcContext *ctx, uint8_t *pos, size_t n)
 {
-    NcMbuf *buf = (ctx->mbuf_pool).alloc();
+    NcMbuf *buf = (ctx->mbuf_pool).alloc<NcMbuf>();
     if (buf == NULL)
     {
         LOG_WARN("buf is NULL");
@@ -52,7 +52,7 @@ rstatus_t NcMsg::preAppend(NcContext *ctx, uint8_t *pos, size_t n)
 rstatus_t NcMsg::prependFormat(NcContext *ctx, const char *fmt, ...)
 {
     va_list args;
-    NcMbuf *buf = (ctx->mbuf_pool).alloc();
+    NcMbuf *buf = (ctx->mbuf_pool).alloc<NcMbuf>();
     if (buf == NULL)
     {
         LOG_WARN("buf is NULL");
@@ -153,7 +153,7 @@ rstatus_t NcMsg::parseDone(NcConn* conn)
     
     LOG_DEBUG("nbuf length : %d, len : %d", nbuf->length(), m_mlen_);
 
-    NcMsg *nmsg = (NcMsg *)(ctx->msg_pool).alloc();
+    NcMsg *nmsg = (NcMsg *)(ctx->msg_pool).alloc<NcMsg>();
     if (nmsg == NULL) 
     {
         LOG_DEBUG("nmsg is NULL");
@@ -204,6 +204,8 @@ bool NcMsg::requestDone(NcConn* conn)
 
 bool NcMsg::requestFilter(NcConn* conn)
 {
+    FUNCTION_INTO(NcMsg);
+
     if (empty())
     {
         LOG_DEBUG("filter empty req %" PRIu64 " from c %d", m_id_, conn->m_sd_);
@@ -316,7 +318,7 @@ rstatus_t NcMsg::requestMakeReply(NcConn* conn)
     NcContext *ctx = (NcContext*)(conn->getContext());
     ASSERT(ctx != NULL);
 
-    NcMsg *rsp = (NcMsg*)(ctx->msg_pool).alloc();
+    NcMsg *rsp = (NcMsg*)(ctx->msg_pool).alloc<NcMsg>();
     if (rsp == NULL) 
     {
         m_err_ = errno;
@@ -341,6 +343,8 @@ bool NcMsg::responseFilter(NcConn* conn)
         conn->freeMsg(this, false);
         return true;
     }
+
+    LOG_DEBUG("m_omsg_q_ size : %d", conn->m_omsg_q_.size());
 
     NcMsg *pmsg = (NcMsg*)(conn->m_omsg_q_.front());
     if (pmsg == NULL) 
@@ -394,9 +398,12 @@ void NcMsg::responseForward(NcConn* conn)
     m_peer_ = pmsg;
 
     NcConn* c_conn = (NcConn*)(pmsg->data);
-    LOG_DEBUG("c_conn : %p, m_sd_ : %d", c_conn, c_conn->m_sd_);
     NcMsg* msg = (NcMsg*)(c_conn->m_omsg_q_.front());
-    if (msg->requestDone(c_conn)) 
+    
+    LOG_DEBUG("c_conn : %p, m_sd_ : %d, msg : %p, msg->m_mlen_ : %d, pmsg->m_mlen_ : %d", 
+        c_conn, c_conn->m_sd_, msg, msg->m_mlen_, pmsg->m_mlen_);
+
+    if (msg != NULL && msg->requestDone(c_conn)) 
     {
         rstatus_t status = (ctx->getEvb()).addOutput(c_conn);
         if (status != NC_OK) 

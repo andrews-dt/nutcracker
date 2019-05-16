@@ -115,9 +115,7 @@ int NcConn::callback(uint32_t events)
             return NC_ERROR;
         }
     }
-    
-    FUNCTION_OUT(NcConn);
-
+  
     return NC_OK;
 }
 
@@ -180,7 +178,7 @@ rstatus_t NcConn::recvChain(NcMsgBase *_msg)
     NcMbuf *mbuf = mbuf_queue->back();
     if (mbuf == NULL || mbuf->full()) 
     {
-        mbuf = (ctx->mbuf_pool).alloc();
+        mbuf = (ctx->mbuf_pool).alloc<NcMbuf>();
         if (mbuf == NULL) 
         {
             LOG_ERROR("mbuf is NULL");

@@ -286,7 +286,7 @@ rstatus_t NcProxyConn::accept()
         return NC_OK;
     }
 
-    NcConn *conn = (NcConn*)(ctx->c_pool).alloc();
+    NcConn *conn = (NcConn*)(ctx->c_pool).alloc<NcClientConn>();
     if (conn == NULL) 
     {
         LOG_ERROR("get conn for c %d from p %d failed: %s", sd, m_sd_, strerror(errno));

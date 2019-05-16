@@ -70,7 +70,7 @@ rstatus_t NcConfListen::parse(NcString &value)
 
     // 赋值操作
     pname = value;
-    name = NcString((const char*)_name, _namelen);
+    name = NcString(_name, _namelen);
     LOG_DEBUG("name : %s, port : %d", name.c_str(), port);
     rstatus_t status = NcUtil::nc_resolve(&name, port, &info);
     if (status != NC_OK) 
@@ -182,7 +182,7 @@ rstatus_t NcConfServer::parse(NcString &value)
 
     // 赋值操作
     pname = value;
-    name = NcString((const char*)_name, _namelen);
+    name = NcString(_name, _namelen);
     LOG_DEBUG("name : %s, port : %d", name.c_str(), port);
     rstatus_t status = NcUtil::nc_resolve(&name, port, &info);
     if (status != NC_OK) 
@@ -422,7 +422,7 @@ rstatus_t NcConf::yamlPushScalar()
 
     LOG_DEBUG("push '%.*s'", scalar_len, scalar);
 
-    NcString value((const char*)scalar, scalar_len);
+    NcString value(scalar, scalar_len);
     args.push_back(value);
 
     return NC_OK;
@@ -546,7 +546,7 @@ rstatus_t NcConf::handler(NcConf *cf, NcConfPool *data)
 
     LOG_DEBUG("key : %s, value : %s", key.c_str(), value.c_str());
 
-    if (key == "listen")
+    if (key == (const uint8_t*)"listen")
     {
         status = data->listen.parse(value);
         if (status != NC_OK)
@@ -554,7 +554,7 @@ rstatus_t NcConf::handler(NcConf *cf, NcConfPool *data)
             LOG_DEBUG("status : %d", status);
         }
     }
-    else if (key == "servers")
+    else if (key == (const uint8_t*)"servers")
     {
         NcConfServer *cs = new NcConfServer();
         status = cs->parse(value);

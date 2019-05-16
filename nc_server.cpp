@@ -34,7 +34,7 @@ NcConn* NcServer::getConn()
 
     if (m_ns_conn_q_ < m_server_pool_->server_connections) 
     {
-        return (NcConn*)(m_server_pool_->ctx->s_pool).alloc();
+        return (NcConn*)(m_server_pool_->ctx->s_pool).alloc<NcServerConn>();
     }
 
     NcConnBase *conn = m_conn_queue_.front();
@@ -404,7 +404,7 @@ NcMsgBase* NcServerConn::recvNext(bool alloc)
     }
 
     // 分配msg
-    msg = (NcMsg*)(ctx->msg_pool).alloc();
+    msg = (NcMsg*)(ctx->msg_pool).alloc<NcMsg>();
     if (msg != NULL) 
     {
         m_rmsg_ = msg;
@@ -419,6 +419,9 @@ void NcServerConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
     
     m_rmsg_ = rmsg;
     NcMsg *msg = (NcMsg*)cmsg;
+    
+    LOG_DEBUG("msg mlen : %d", msg->m_mlen_);
+
     if (msg->responseFilter(this)) 
     {
         return ;

@@ -207,7 +207,7 @@ int NcEventBase::wait(int timeout)
         {
             for (i = 0; i < nsd; i++) 
             {
-                struct epoll_event *ev = &m_event_->event[i];
+                struct epoll_event *ev = &(m_event_->event[i]);
                 uint32_t events = 0;
 
                 if (ev->events & EPOLLERR) 
@@ -226,7 +226,8 @@ int NcEventBase::wait(int timeout)
                 }
 
                 NcConnBase *c = (NcConnBase*)(ev->data.ptr);
-                LOG_DEBUG("c : %p", c);
+                LOG_DEBUG("ev->events : %d, events : %d, c : %p", 
+                    ev->events, events, c);
                 if (NULL != c) 
                 {
                     c->callback(events);
