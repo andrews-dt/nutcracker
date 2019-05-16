@@ -172,7 +172,7 @@ NcMsgBase* NcClientConn::recvNext(bool alloc)
     }
 
     // 分配msg
-    msg = (NcMsg*)(ctx->msg_pool).alloc();
+    msg = (NcMsg*)(ctx->msg_pool).alloc<NcMsg>();
     if (msg == NULL)
     {
         m_err_ = errno;
@@ -296,6 +296,8 @@ NcMsgBase* NcClientConn::sendNext()
 
 void NcClientConn::sendDone(NcMsgBase *msg)
 {
+    FUNCTION_INTO(NcClientConn);
+
     LOG_DEBUG("send done rsp %" PRIu64 " on c %d", msg->m_id_, m_sd_);
 
     NcMsg *pmsg = (NcMsg*)(msg->m_peer_);
