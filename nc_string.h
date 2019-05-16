@@ -64,9 +64,9 @@ public:
         }
     }
 
-    NcString(const char *s, uint32_t len)
+    NcString(const uint8_t *s, uint32_t len)
     {
-        if (m_data_ == (uint8_t *)s)
+        if (m_data_ == s)
         {
             return ;
         }
@@ -95,7 +95,7 @@ public:
         m_data_ = NULL;
     }
 
-    NcString &operator=(const NcString &s)
+    NcString& operator=(const NcString &s)
     {
         if (this == &s)
         {
@@ -117,15 +117,15 @@ public:
         return *this;
     }
 
-    NcString& operator=(const char *s)
+    NcString& operator=(const uint8_t *s)
     {
-        if (m_data_ == (uint8_t *)s)
+        if (m_data_ == s)
         {
             return *this;
         }
 
         uint8_t *temp = m_data_;
-        m_len_ = strlen(s);
+        m_len_ = strlen((const char*)s);
         m_data_ = nc_strndup(s, m_len_ + 1);
         if (m_data_ != NULL) 
         {
@@ -143,27 +143,38 @@ public:
         return *this;
     }
 
-    int operator==(const char *s)
+    bool operator==(const NcString &s)
+    {
+        if (m_len_ <= 0)
+        {
+            return false;
+        }
+
+        int status = strcmp((char*)m_data_, (const char*)s.c_str());
+        return status == 0 ? true : false;
+    }
+
+    bool operator==(const uint8_t *s)
     {
         if (m_len_ <= 0 || s == NULL)
         {
-            return 0;
+            return false;
         }
 
-        int status = strcmp((char *)m_data_, s);
-        return status == 0 ? 1 : 0;
+        int status = strcmp((char*)m_data_, (const char*)s);
+        return status == 0 ? true : false;
     }
 
-    void setText(const char *text, uint32_t len)
+    void setText(const uint8_t *text, uint32_t len)
     {
         m_len_ = len - 1;
-        m_data_ = (uint8_t *)(text);
+        m_data_ = (uint8_t*)(text);
     }
 
-    void setRaw(const char *raw)
+    void setRaw(const uint8_t *raw)
     {
         m_len_ = (uint32_t)(nc_strlen(raw));
-        m_data_ = (uint8_t *)(raw);
+        m_data_ = (uint8_t*)(raw);
     }
 
     const uint8_t* c_str() const
