@@ -1,4 +1,4 @@
-begin = os.clock();
+begin = os.clock()
 str = "Hello! My name is Jack. What is your name?"
 i = 0
 while i <= 500 do

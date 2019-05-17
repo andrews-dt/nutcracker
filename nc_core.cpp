@@ -123,7 +123,7 @@ rstatus_t NcInstance::loop()
     FUNCTION_INTO(NcInstance);
 
     // TODO : 
-    timeout = 10000;
+    timeout = -1;
     int nsd = evb.wait(timeout);
     LOG_DEBUG("nsd : %d", nsd);
     if (nsd < 0) 

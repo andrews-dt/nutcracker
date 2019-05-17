@@ -198,7 +198,7 @@ rstatus_t NcProxyConn::listen()
 
     LOG_DEBUG("ctx : %p, evb : %p", ctx, &(ctx->getEvb()));
 
-    status = ctx->getEvb().addConn(this);
+    status = (ctx->getEvb()).addConn(this);
     if (status < 0) 
     {
         FUNCTION_OUT(NcProxyConn);
@@ -330,7 +330,7 @@ rstatus_t NcProxyConn::accept()
         }
     }
 
-    status = (ctx->getEvb()).addConn(conn);
+    status = (ctx->getEvb()).addConn(conn, EVENT_READ);
     if (status < 0) 
     {
         LOG_ERROR("event add conn from p %d failed: %s", m_sd_, strerror(errno));

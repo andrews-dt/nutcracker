@@ -7,4 +7,3 @@ leaf:
   server_failure_limit: 1
   servers:
    - 127.0.0.1:8000:100
-   - 127.0.0.1:8000:10

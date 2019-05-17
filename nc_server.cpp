@@ -249,7 +249,7 @@ rstatus_t NcServerConn::connect()
     }
 
     status = ctx->getEvb().addConn(this);
-    if (status != NC_OK) 
+    if (status != NC_OK)
     {
         LOG_ERROR("event add conn s %d for server '%.*s' failed: %s",
             m_sd_, server->m_name_.length(), server->m_name_.c_str(),
@@ -430,7 +430,7 @@ void NcServerConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
     msg->responseForward(this);
 }
 
-NcContext* NcServerConn::getContext()
+void* NcServerConn::getContext()
 {
     NcServer *server = (NcServer*)m_owner_;
     if (server == NULL)

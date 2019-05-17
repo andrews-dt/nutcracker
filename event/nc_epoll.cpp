@@ -1,5 +1,7 @@
-#include <sys/epoll.h>
 #include <nc_event.h>
+
+#ifdef NC_HAVE_EPOLL
+#include <sys/epoll.h>
 
 NcEventBase::NcEventBase(int nevent)
 {
@@ -15,7 +17,7 @@ NcEventBase::NcEventBase(int nevent)
     event = (struct epoll_event*)calloc(nevent, sizeof(struct epoll_event));
     if (event == NULL) 
     {
-        status = close(ep);
+        status = ::close(ep);
         if (status < 0) 
         {
             LOG_ERROR("calloc error!!!");
@@ -26,8 +28,8 @@ NcEventBase::NcEventBase(int nevent)
     m_event_ = (struct _event*)malloc(sizeof(struct _event));
     if (m_event_ == NULL) 
     {
-        free(event);
-        status = close(ep);
+        ::free(event);
+        status = ::close(ep);
         if (status < 0) 
         {
             LOG_ERROR("malloc error!!!");
@@ -46,19 +48,19 @@ NcEventBase::~NcEventBase()
 
     if (m_event_ == NULL) 
     {
-        return;
+        return ;
     }
 
-    free(m_event_->event);
+    ::free(m_event_->event);
 
-    status = close(m_event_->ep);
+    status = ::close(m_event_->ep);
     if (status < 0) 
     {
         LOG_ERROR("close error, ep:%d", m_event_->ep);
     }
 
     m_event_->ep = -1;
-    free(m_event_);
+    ::free(m_event_);
 }
 
 int NcEventBase::addInput(NcConnBase *c)
@@ -148,13 +150,24 @@ int NcEventBase::delOutput(NcConnBase *c)
     return status;
 }
 
-int NcEventBase::addConn(NcConnBase *c)
+int NcEventBase::addConn(NcConnBase *c, uint32_t events)
 {
     int status;
     struct epoll_event event;
     int ep = m_event_->ep;
 
-    event.events = (uint32_t)(EPOLLIN | EPOLLOUT | EPOLLET);
+    uint32_t _es = 0;
+    if (events & EVENT_READ)
+    {
+        _es |= EPOLLIN;
+    }
+
+    if (events & EVENT_WRITE)
+    {
+        _es |= EPOLLOUT;
+    }
+    
+    event.events = (uint32_t)(_es | EPOLLET);
     event.data.ptr = c;
 
     status = epoll_ctl(ep, EPOLL_CTL_ADD, c->m_sd_, &event);
@@ -255,3 +268,5 @@ int NcEventBase::wait(int timeout)
         return -1;
     }
 }
+
+#endif

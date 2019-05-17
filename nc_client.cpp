@@ -246,12 +246,11 @@ NcMsgBase* NcClientConn::sendNext()
     FUNCTION_INTO(NcClientConn);
 
     NcServerPool *pool = (NcServerPool*)m_owner_;
+    ASSERT(pool != NULL);
     NcContext *ctx = pool->ctx;
-    if (ctx == NULL)
-    {
-        LOG_ERROR("ctx is NULL");
-        return NULL;
-    }
+    ASSERT(ctx != NULL);
+
+    LOG_DEBUG("this : %p, m_omsg_q_ size : %d", this, m_omsg_q_.size());
 
     rstatus_t status;
     NcMsg *pmsg = (NcMsg*)(m_omsg_q_.front());
@@ -275,6 +274,7 @@ NcMsgBase* NcClientConn::sendNext()
     }
 
     NcMsg *msg = (NcMsg*)m_smsg_;
+    LOG_DEBUG("msg : %p", msg);
     if (msg != NULL)
     {
         pmsg = NULL;
@@ -284,9 +284,11 @@ NcMsgBase* NcClientConn::sendNext()
     if (pmsg == NULL)
     {
         m_smsg_ = NULL;
+        return NULL;
     }
 
     // TODO : 需要特殊处理
+    msg = (NcMsg*)(pmsg->m_peer_);
     m_smsg_ = msg;
 
     LOG_DEBUG("send next rsp on c %d", m_sd_);

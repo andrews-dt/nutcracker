@@ -265,7 +265,7 @@ public:
 
     virtual void sendDone(NcMsgBase *msg);
 
-    virtual NcContext* getContext();
+    virtual void* getContext();
 };
 
 #endif

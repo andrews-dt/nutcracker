@@ -1,13 +1,13 @@
 SHELL = /bin/sh
-CC = gcc
+CC = g++
 AR = ar
  
-CFLAG = -O2 -W -Wall -DNC_HAVE_EPOLL
+CFLAG = -O2 -W -Wall -DNC_HAVE_KQUEUE # -DNC_HAVE_EPOLL
  
 INCLUDE_PATH = -I. -I../
 EVENT_TARGET = libnc_event.a
-EVENT_OBJ = nc_epoll.o
-EVENT_SRC = nc_epoll.cpp
+EVENT_OBJ = nc_epoll.o nc_kqueue.o
+EVENT_SRC = nc_epoll.cpp nc_kqueue.cpp
  
 all : $(EVENT_TARGET)
 $(EVENT_OBJ): $(EVENT_SRC)

@@ -1,7 +1,9 @@
 SHELL = /bin/sh
 CC = g++
 
-CFLAG = -W -Wall -g -Wno-reorder -Wno-unused-parameter -Wno-format -Wno-sign-compare -Wno-implicit-fallthrough -DDEBUG -DHAVE_EPOLL
+CFLAG = -W -Wall -g -Wno-reorder \
+	-Wno-unused-parameter -Wno-format -Wno-sign-compare -Wno-implicit-fallthrough \
+	-DDEBUG -DHAVE_KQUEUE
 
 INCLUDE_PATH = -I. -I../ -I../event/
 LIBS_PATH = ../event/libnc_event.a

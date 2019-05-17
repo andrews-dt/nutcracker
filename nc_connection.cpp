@@ -252,8 +252,6 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
 
         NcMbuf *mbuf = mbuf_queue->front();
         NcQueue<NcMbuf*>::ConstIterator iter = mbuf_queue->find(mbuf);
-        LOG_DEBUG("mbuf : %p, size : %d", mbuf, mbuf_queue->size());
-        LOG_DEBUG("iter : %p, end : %p, nsend < limit : %d", iter, mbuf_queue->end(), nsend < limit);
         while (iter != mbuf_queue->end() && nsend < limit)
         {
             LOG_DEBUG("mbuf_queue size : %d", mbuf_queue->size());

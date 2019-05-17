@@ -24,9 +24,9 @@
 
 #define EVENT_SIZE  1024
 
-#define EVENT_READ  0x0000ff
-#define EVENT_WRITE 0x00ff00
-#define EVENT_ERR   0xff0000
+#define EVENT_READ  0x000001
+#define EVENT_WRITE 0x000010
+#define EVENT_ERR   0x000100
 
 #define NC_EVENT_OK        0
 #define NC_EVENT_ERROR    -1
@@ -35,7 +35,7 @@
 
 #ifdef NC_HAVE_KQUEUE
 
-class _event 
+struct _event 
 {
 public:
     int           kq;          /* kernel event queue descriptor */
@@ -51,9 +51,8 @@ public:
 
 #elif NC_HAVE_EPOLL
 
-class _event 
+struct _event 
 {
-public:
     int                ep;      /* epoll descriptor */
 
     struct epoll_event *event;  /* event[] - events that were triggered */
@@ -320,7 +319,7 @@ public:
 
     int delOutput(NcConnBase *c);
 
-    int addConn(NcConnBase *c);
+    int addConn(NcConnBase *c, uint32_t events = EVENT_READ | EVENT_WRITE);
 
     int delConn(NcConnBase *c);
 
