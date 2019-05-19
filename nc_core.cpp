@@ -153,7 +153,7 @@ rstatus_t NcInstance::loop()
         NcConn *conn = (NcConn*)(msg->data);
         int64_t then = msg->key;
 
-        int64_t now = NcUtil::nc_msec_now();
+        int64_t now = NcUtil::ncMsecNow();
         if (now < then) 
         {
             int delta = (int)(then - now);

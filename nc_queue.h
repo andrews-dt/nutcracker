@@ -798,7 +798,7 @@ public:
         return m_list_.back();
     }
 
-    inline void push(const ValType& v)
+    inline void push(const ValType &v)
     {
         m_list_.push_back(v); // 插入到最后
     }
@@ -813,7 +813,7 @@ public:
         m_list_.pop_back(); // 弹出最后一个
     }
 
-    inline void remove(const ValType& v)
+    inline void remove(const ValType &v)
     {
         m_list_.remove(v);
     }
@@ -823,7 +823,7 @@ public:
         return m_list_.size();
     } 
 
-    inline ConstIterator find(const ValType& v)
+    inline ConstIterator find(const ValType &v)
     {
         return std::find(m_list_.begin(), m_list_.end(), v);
     }

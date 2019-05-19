@@ -35,19 +35,16 @@ typedef unsigned int MD5_u32plus;
  * doesn't work.
  */
 #if defined(__i386__) || defined(__x86_64__) || defined(__vax__)
-#define SET(n) \
-    (*(MD5_u32plus *)&ptr[(n) * 4])
-#define GET(n) \
-    SET(n)
+    #define SET(n) (*(MD5_u32plus *)&ptr[(n) * 4])
+    #define GET(n) SET(n)
 #else
-#define SET(n)                                  \
-    (ctx->block[(n)] =                          \
-    (MD5_u32plus)ptr[(n) * 4] |                 \
-    ((MD5_u32plus)ptr[(n) * 4 + 1] << 8) |      \
-    ((MD5_u32plus)ptr[(n) * 4 + 2] << 16) |     \
-    ((MD5_u32plus)ptr[(n) * 4 + 3] << 24))
-#define GET(n) \
-    (ctx->block[(n)])
+    #define SET(n)                                  \
+        (ctx->block[(n)] =                          \
+        (MD5_u32plus)ptr[(n) * 4] |                 \
+        ((MD5_u32plus)ptr[(n) * 4 + 1] << 8) |      \
+        ((MD5_u32plus)ptr[(n) * 4 + 2] << 16) |     \
+        ((MD5_u32plus)ptr[(n) * 4 + 3] << 24))
+    #define GET(n) (ctx->block[(n)])
 #endif
 
 class NcMd5
@@ -70,7 +67,8 @@ public:
         c = m_c_;
         d = m_d_;
 
-        do {
+        do 
+        {
             saved_a = a;
             saved_b = b;
             saved_c = c;
@@ -884,7 +882,6 @@ public:
 
 typedef enum 
 {
-    // 使用的hash方法
     kHASH_ONE_AT_A_TIME     = 0x1,
     kHASH_MD5               = 0x2,
     kHASH_CRC16             = 0x3,
@@ -897,12 +894,15 @@ typedef enum
     kHASH_HSIEH             = 0xa,
     kHASH_MURMUR            = 0xb,
     kHASH_JENKINS           = 0xc,
-    
-    // 使用的分布式一致性方法
+} HashType;
+
+// 使用的分布式一致性方法
+typedef enum 
+{
     kDIST_KETAMA            = 0x100,
     kDIST_MODULA            = 0x200,
     kDIST_RANDOM            = 0x300,
-} HashType;
+} DistType;
 
 #define RANDOM_CONTINUUM_ADDITION   10  /* # extra slots to build into continuum */
 #define RANDOM_POINTS_PER_SERVER    1

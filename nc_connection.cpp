@@ -6,7 +6,7 @@ void NcConn::processError()
 {
     FUNCTION_INTO(NcConn);
 
-    rstatus_t status = NcUtil::nc_get_soerror(m_sd_);
+    rstatus_t status = NcUtil::ncGetSoError(m_sd_);
     if (status < 0)
     {
         LOG_WARN("get soerr on %d failed, ignored: %s", m_sd_,
@@ -54,11 +54,11 @@ void NcConn::processClose()
 
     if (m_conn_type_ == NC_CLIENT) 
     {
-        addrstr = NcUtil::nc_unresolve_peer_desc(m_sd_);
+        addrstr = NcUtil::ncUnResolvePeerDesc(m_sd_);
     } 
     else 
     {
-        addrstr = NcUtil::nc_unresolve_addr(m_addr_, m_addrlen_);
+        addrstr = NcUtil::ncUnresolveAddr(m_addr_, m_addrlen_);
     }
 
     LOG_DEBUG("close %d", m_sd_);

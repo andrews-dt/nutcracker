@@ -2,7 +2,7 @@
 
 rstatus_t NcHashKit::random_update(NcServerPool *pool)
 {
-    int64_t now = NcUtil::nc_usec_now();
+    int64_t now = NcUtil::ncUsecNow();
 
     if (now < 0)
     {
@@ -96,7 +96,7 @@ rstatus_t NcHashKit::random_update(NcServerPool *pool)
 
 rstatus_t NcHashKit::modula_update(NcServerPool *pool)
 {
-    int64_t now = NcUtil::nc_usec_now();
+    int64_t now = NcUtil::ncUsecNow();
 
     if (now < 0)
     {

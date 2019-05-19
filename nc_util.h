@@ -90,78 +90,63 @@ typedef int err_t;      /* error type */
  * invoking system calls.
  */
 #define nc_gethostname(_name, _len) gethostname((char *)_name, (size_t)_len)
+
 #define nc_atoi(_line, _n)          _nc_atoi((uint8_t *)_line, (size_t)_n)
+
 #define nc_alloc(_s)                _nc_alloc((size_t)(_s), __FILE__, __LINE__)
+
 #define nc_zalloc(_s)               _nc_zalloc((size_t)(_s), __FILE__, __LINE__)
+
 #define nc_calloc(_n, _s)           _nc_calloc((size_t)(_n), (size_t)(_s), __FILE__, __LINE__)
+
 #define nc_realloc(_p, _s)          _nc_realloc(_p, (size_t)(_s), __FILE__, __LINE__)
-#define nc_free(_p) do {                \
-    _nc_free(_p, __FILE__, __LINE__);   \
-    (_p) = NULL;                        \
-} while (0)
 
-#define nc_delete(_p) do {                  \
-    if (_p != NULL) delete (_p);            \
-} while (0)
+#define nc_free(_p) do                      \
+    {                                       \
+        _nc_free(_p, __FILE__, __LINE__);   \
+        (_p) = NULL;                        \
+    } while (0)
 
-#define nc_delete_arr(_p) do {              \
-    if (_p != NULL) delete [] (_p);         \
-} while (0)
+#define nc_delete(_p) do                    \
+    {                                       \
+        if (_p != NULL) delete (_p);        \
+    } while (0)
 
+#define nc_delete_arr(_p) do                \
+    {                                       \
+        if (_p != NULL) delete [] (_p);     \
+    } while (0)
 
 #define nc_sendn(_s, _b, _n)    _nc_sendn(_s, _b, (size_t)(_n))
+
 #define nc_recvn(_s, _b, _n)    _nc_recvn(_s, _b, (size_t)(_n))
+
 #define nc_read(_d, _b, _n)     read(_d, _b, (size_t)(_n))
+
 #define nc_readv(_d, _b, _n)    readv(_d, _b, (int)(_n))
+
 #define nc_write(_d, _b, _n)    write(_d, _b, (size_t)(_n))
+
 #define nc_writev(_d, _b, _n)   writev(_d, _b, (int)(_n))
-
-#ifdef NC_ASSERT_PANIC
-
-#define ASSERT(_x) do {                         \
-    if (!(_x)) {                                \
-        nc_assert(#_x, __FILE__, __LINE__, 1);  \
-    }                                           \
-} while (0)
-
-#define NOT_REACHED() ASSERT(0)
-
-#elif NC_ASSERT_LOG
-
-#define ASSERT(_x) do {                         \
-    if (!(_x)) {                                \
-        nc_assert(#_x, __FILE__, __LINE__, 0);  \
-    }                                           \
-} while (0)
-
-#define NOT_REACHED() ASSERT(0)
-
-#else
-
-#define ASSERT(_x)
-
-#define NOT_REACHED()
-
-#endif
 
 // 系统函数
 extern "C"
 {
     int _nc_atoi(uint8_t *line, size_t n);
 
-    void *_nc_alloc(size_t size, const char *name, int line);
+    void* _nc_alloc(size_t size, const char *name, int line);
 
-    void *_nc_zalloc(size_t size, const char *name, int line);
+    void* _nc_zalloc(size_t size, const char *name, int line);
 
-    void *_nc_calloc(size_t nmemb, size_t size, const char *name, int line);
+    void* _nc_calloc(size_t nmemb, size_t size, const char *name, int line);
 
-    void *_nc_realloc(void *ptr, size_t size, const char *name, int line);
+    void* _nc_realloc(void *ptr, size_t size, const char *name, int line);
 
     void _nc_free(void *ptr, const char *name, int line);
 
     ssize_t _nc_sendn(int sd, const void *vptr, size_t n);
 
-    ssize_t _nc_recvn(int sd, void *vptr, size_t n);
+    ssize_t _nc_recvn(int sd, void* vptr, size_t n);
 
     int _scnprintf(char *buf, size_t size, const char *fmt, ...);
 
@@ -183,7 +168,7 @@ struct sockinfo
 class NcUtil
 {
 public:
-    inline static bool nc_valid_port(int n)
+    inline static bool ncValidPort(int n)
     {
         if (n < 1 || n > UINT16_MAX) 
         {
@@ -193,33 +178,33 @@ public:
         return true;
     }
 
-    inline static int nc_set_blocking(int sd)
+    inline static int ncSetBlocking(int sd)
     {
         int flags;
 
-        flags = fcntl(sd, F_GETFL, 0);
+        flags = ::fcntl(sd, F_GETFL, 0);
         if (flags < 0) 
         {
             return flags;
         }
 
-        return fcntl(sd, F_SETFL, flags & ~O_NONBLOCK);
+        return ::fcntl(sd, F_SETFL, flags & ~O_NONBLOCK);
     }
 
-    inline static int nc_set_nonblocking(int sd)
+    inline static int ncSetNonBlocking(int sd)
     {
         int flags;
 
-        flags = fcntl(sd, F_GETFL, 0);
+        flags = ::fcntl(sd, F_GETFL, 0);
         if (flags < 0) 
         {
             return flags;
         }
 
-        return fcntl(sd, F_SETFL, flags | O_NONBLOCK);
+        return ::fcntl(sd, F_SETFL, flags | O_NONBLOCK);
     }
 
-    inline static int nc_set_reuseaddr(int sd)
+    inline static int ncSetReuseAddr(int sd)
     {
         int reuse;
         socklen_t len;
@@ -227,10 +212,10 @@ public:
         reuse = 1;
         len = sizeof(reuse);
 
-        return setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &reuse, len);
+        return ::setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &reuse, len);
     }
 
-    inline static int nc_set_tcpnodelay(int sd)
+    inline static int ncSetTcpNodelay(int sd)
     {
         int nodelay;
         socklen_t len;
@@ -238,10 +223,10 @@ public:
         nodelay = 1;
         len = sizeof(nodelay);
 
-        return setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, &nodelay, len);
+        return ::setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, &nodelay, len);
     }
 
-    inline static int nc_set_linger(int sd, int timeout)
+    inline static int ncSetLinger(int sd, int timeout)
     {
         struct linger linger;
         socklen_t len;
@@ -251,33 +236,33 @@ public:
 
         len = sizeof(linger);
 
-        return setsockopt(sd, SOL_SOCKET, SO_LINGER, &linger, len);
+        return ::setsockopt(sd, SOL_SOCKET, SO_LINGER, &linger, len);
     }
 
-    inline static int nc_set_sndbuf(int sd, int size)
+    inline static int ncSetSndBuf(int sd, int size)
     {
         socklen_t len;
         len = sizeof(size);
 
-        return setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &size, len);
+        return ::setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &size, len);
     }
 
-    inline static int nc_set_rcvbuf(int sd, int size)
+    inline static int ncSetRcvBuf(int sd, int size)
     {
         socklen_t len;
 
         len = sizeof(size);
 
-        return setsockopt(sd, SOL_SOCKET, SO_RCVBUF, &size, len);
+        return ::setsockopt(sd, SOL_SOCKET, SO_RCVBUF, &size, len);
     }
 
-    inline static int nc_set_tcpkeepalive(int sd)
+    inline static int ncSetTcpKeepalive(int sd)
     {
         int val = 1;
-        return setsockopt(sd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
+        return ::setsockopt(sd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
     }
 
-    inline static int nc_get_soerror(int sd)
+    inline static int ncGetSoError(int sd)
     {
         int status, err;
         socklen_t len;
@@ -285,7 +270,7 @@ public:
         err = 0;
         len = sizeof(err);
 
-        status = getsockopt(sd, SOL_SOCKET, SO_ERROR, &err, &len);
+        status = ::getsockopt(sd, SOL_SOCKET, SO_ERROR, &err, &len);
         if (status == 0) 
         {
             errno = err;
@@ -294,7 +279,7 @@ public:
         return status;
     }
 
-    inline static int nc_get_sndbuf(int sd)
+    inline static int ncGetSndBuf(int sd)
     {
         int status, size;
         socklen_t len;
@@ -302,7 +287,7 @@ public:
         size = 0;
         len = sizeof(size);
 
-        status = getsockopt(sd, SOL_SOCKET, SO_SNDBUF, &size, &len);
+        status = ::getsockopt(sd, SOL_SOCKET, SO_SNDBUF, &size, &len);
         if (status < 0) 
         {
             return status;
@@ -311,7 +296,7 @@ public:
         return size;
     }
 
-    inline static int nc_get_rcvbuf(int sd)
+    inline static int ncGetRcvBuf(int sd)
     {
         int status, size;
         socklen_t len;
@@ -319,7 +304,7 @@ public:
         size = 0;
         len = sizeof(size);
 
-        status = getsockopt(sd, SOL_SOCKET, SO_RCVBUF, &size, &len);
+        status = ::getsockopt(sd, SOL_SOCKET, SO_RCVBUF, &size, &len);
         if (status < 0) 
         {
             return status;
@@ -328,13 +313,13 @@ public:
         return size;
     }
 
-    inline static int64_t nc_usec_now(void)
+    inline static int64_t ncUsecNow(void)
     {
         struct timeval now;
         int64_t usec;
         int status;
 
-        status = gettimeofday(&now, NULL);
+        status = ::gettimeofday(&now, NULL);
         if (status < 0) 
         {
             return -1;
@@ -345,12 +330,12 @@ public:
         return usec;
     }
 
-    inline static int64_t nc_msec_now(void)
+    inline static int64_t ncMsecNow(void)
     {
-        return nc_usec_now() / 1000LL;
+        return ncUsecNow() / 1000LL;
     }
 
-    inline static int nc_resolve(NcString *name, int port, struct sockinfo *si)
+    inline static int ncResolve(NcString *name, int port, struct sockinfo *si)
     {
         if (name == NULL || name->length() <= 0)
         {
@@ -441,19 +426,19 @@ public:
                 break;
             }
 
-            freeaddrinfo(ai);
+            ::freeaddrinfo(ai);
             return !found ? -1 : 0;
         }
     }
 
-    inline static char* nc_unresolve_addr(struct sockaddr *addr, socklen_t addrlen)
+    inline static char* ncUnresolveAddr(struct sockaddr *addr, socklen_t addrlen)
     {
         static char unresolve[NI_MAXHOST + NI_MAXSERV];
         static char host[NI_MAXHOST], service[NI_MAXSERV];
 
-        int status = getnameinfo(addr, addrlen, host, sizeof(host),
-                            service, sizeof(service),
-                            NI_NUMERICHOST | NI_NUMERICSERV);
+        int status = ::getnameinfo(addr, addrlen, host, sizeof(host),
+            service, sizeof(service),
+            NI_NUMERICHOST | NI_NUMERICSERV);
         if (status < 0) 
         {
             return (char *)"unknown";
@@ -465,7 +450,7 @@ public:
     }
 
     // 获取对端地址
-    inline static char *nc_unresolve_peer_desc(int sd)
+    inline static char* ncUnResolvePeerDesc(int sd)
     {
         static struct sockinfo si;
 
@@ -473,16 +458,16 @@ public:
         struct sockaddr* addr = (struct sockaddr *)&si.addr;
         socklen_t addrlen = sizeof(si.addr);
 
-        int status = getpeername(sd, addr, &addrlen);
+        int status = ::getpeername(sd, addr, &addrlen);
         if (status < 0) 
         {
             return (char *)"unknown";
         }
 
-        return nc_unresolve_addr(addr, addrlen);
+        return ncUnresolveAddr(addr, addrlen);
     }
 
-    inline static char* nc_unresolve_desc(int sd)
+    inline static char* ncUnResolveDesc(int sd)
     {
         static struct sockinfo si;
 
@@ -490,13 +475,13 @@ public:
         struct sockaddr* addr = (struct sockaddr *)&si.addr;
         socklen_t addrlen = sizeof(si.addr);
 
-        int status = getsockname(sd, addr, &addrlen);
+        int status = ::getsockname(sd, addr, &addrlen);
         if (status < 0) 
         {
             return (char *)"unknown";
         }
 
-        return nc_unresolve_addr(addr, addrlen);
+        return ncUnresolveAddr(addr, addrlen);
     }
 
     inline static uint64_t uniqNextId()

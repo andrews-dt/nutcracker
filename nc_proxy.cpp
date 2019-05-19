@@ -115,7 +115,7 @@ rstatus_t NcProxyConn::reuse()
     {
     case AF_INET:
     case AF_INET6:
-        status = NcUtil::nc_set_reuseaddr(m_sd_);
+        status = NcUtil::ncSetReuseAddr(m_sd_);
         break;
 
     case AF_UNIX:
@@ -188,7 +188,7 @@ rstatus_t NcProxyConn::listen()
         return NC_ERROR;
     }
 
-    status = NcUtil::nc_set_nonblocking(m_sd_);
+    status = NcUtil::ncSetNonBlocking(m_sd_);
     if (status < 0) 
     {
         LOG_ERROR("set nonblock on p %d on addr '%.*s' failed: %s", m_sd_,
@@ -301,7 +301,7 @@ rstatus_t NcProxyConn::accept()
 
     conn->setSd(sd);
     conn->ref(m_owner_);
-    status = NcUtil::nc_set_nonblocking(conn->getSd());
+    status = NcUtil::ncSetNonBlocking(conn->getSd());
     if (status < 0) 
     {
         LOG_ERROR("set nonblock on c %d from p %d failed: %s", 
@@ -312,7 +312,7 @@ rstatus_t NcProxyConn::accept()
 
     if (pool->tcpkeepalive) 
     {
-        status = NcUtil::nc_set_tcpkeepalive(conn->getSd());
+        status = NcUtil::ncSetTcpKeepalive(conn->getSd());
         if (status < 0) 
         {
             LOG_WARN("set tcpkeepalive on c %d from p %d failed, ignored: %s",
@@ -322,7 +322,7 @@ rstatus_t NcProxyConn::accept()
 
     if (m_family_ == AF_INET || m_family_ == AF_INET6) 
     {
-        status = NcUtil::nc_set_tcpnodelay(conn->getSd());
+        status = NcUtil::ncSetTcpNodelay(conn->getSd());
         if (status < 0) 
         {
             LOG_WARN("set tcpnodelay on c %d from p %d failed, ignored: %s",

@@ -13,6 +13,18 @@
 #include <time.h>
 #include <unistd.h>
 
+static inline uint8_t* _nc_strchr(uint8_t *p, uint8_t *last, uint8_t c)
+{
+    while (*p != '\0' && p < last && *p++ != c);
+    return p >= last ? NULL : p - 1;
+}
+
+static inline uint8_t* _nc_strrchr(uint8_t *p, uint8_t *start, uint8_t c)
+{
+    while (*p != '\0' && p >= start && *p-- != c);
+    return p < start ? NULL : p + 1;
+}
+
 #define nc_memcpy(_d, _c, _n)               memcpy(_d, _c, (size_t)(_n))
 
 #define nc_memmove(_d, _c, _n)              memmove(_d, _c, (size_t)(_n))
@@ -23,9 +35,9 @@
 
 #define nc_strncmp(_s1, _s2, _n)            strncmp((char *)(_s1), (char *)(_s2), (size_t)(_n))
 
-#define nc_strchr(_p, _l, _c)               NcString::_nc_strchr((uint8_t *)(_p), (uint8_t *)(_l), (uint8_t)(_c))
+#define nc_strchr(_p, _l, _c)               _nc_strchr((uint8_t *)(_p), (uint8_t *)(_l), (uint8_t)(_c))
 
-#define nc_strrchr(_p, _s, _c)              NcString::_nc_strrchr((uint8_t *)(_p),(uint8_t *)(_s), (uint8_t)(_c))
+#define nc_strrchr(_p, _s, _c)              _nc_strrchr((uint8_t *)(_p),(uint8_t *)(_s), (uint8_t)(_c))
 
 #define nc_strndup(_s, _n)                  (uint8_t *)strndup((char *)(_s), (size_t)(_n))
 
@@ -50,7 +62,7 @@ public:
     {
         m_len_ = 0;
         // 初始化一个值
-        m_data_ = (uint8_t*)malloc(sizeof(uint8_t));
+        m_data_ = (uint8_t *)malloc(sizeof(uint8_t));
         m_data_[0] = '\0';
     }
 
@@ -125,7 +137,7 @@ public:
         }
 
         uint8_t *temp = m_data_;
-        m_len_ = strlen((const char*)s);
+        m_len_ = strlen((const char *)s);
         m_data_ = nc_strndup(s, m_len_ + 1);
         if (m_data_ != NULL) 
         {
@@ -200,18 +212,6 @@ public:
         }
 
         return nc_strncmp(m_data_, s.c_str(), m_len_);
-    }
-
-    static inline uint8_t* _nc_strchr(uint8_t *p, uint8_t *last, uint8_t c)
-    {
-        while (*p != '\0' && p < last && *p++ != c);
-        return p >= last ? NULL : p - 1;
-    }
-
-    static inline uint8_t* _nc_strrchr(uint8_t *p, uint8_t *start, uint8_t c)
-    {
-        while (*p != '\0' && p >= start && *p-- != c);
-        return p < start ? NULL : p + 1;
     }
     
 private:

@@ -23,17 +23,12 @@ public:
 
     NcStatus& operator=(const NcStatus& rhs);
 
-    NcStatus(NcStatus&& rhs) : m_state_(rhs.m_state_) 
+    NcStatus(NcStatus &rhs) : m_state_(rhs.m_state_) 
     { 
         rhs.m_state_ = nullptr; 
     }
 
-    NcStatus& operator=(NcStatus&& rhs) noexcept;
-
-    static NcStatus OK() 
-    { 
-        return NcStatus(); 
-    }
+    NcStatus& operator=(NcStatus &rhs) noexcept;
 
     bool ok() const 
     { 
@@ -67,7 +62,7 @@ public:
 
     std::string toString() const;
 
-    const char* copyState(const char* state) 
+    const char* copyState(const char *state) 
     {
         uint32_t size;
         memcpy(&size, state, sizeof(size));
@@ -99,7 +94,7 @@ public:
 class NcTester 
 {
 public:
-    NcTester(const char* f, int l) : 
+    NcTester(const char *f, int l) : 
         m_ok_(true), m_fname_(f), m_line_(l) 
     { }
 
@@ -112,7 +107,7 @@ public:
         }
     }
 
-    NcTester& is(bool b, const char* msg) 
+    NcTester& is(bool b, const char *msg) 
     {
         if (!b) 
         {
@@ -123,7 +118,7 @@ public:
         return *this;
     }
 
-    NcTester& isOk(const NcStatus& s) 
+    NcTester& isOk(const NcStatus &s) 
     {
         if (!s.ok()) 
         {

@@ -120,7 +120,7 @@ void NcServerConn::ref(void *owner)
 {
     NcServer *server = (NcServer*)owner;
 
-    rstatus_t status = NcUtil::nc_resolve(&server->m_addrstr_, server->m_port_, &server->m_info_);
+    rstatus_t status = NcUtil::ncResolve(&server->m_addrstr_, server->m_port_, &server->m_info_);
     if (status != NC_OK) 
     {
         m_err_ = EHOSTDOWN;
@@ -228,7 +228,7 @@ rstatus_t NcServerConn::connect()
         goto ERROR;
     }
 
-    status = NcUtil::nc_set_nonblocking(m_sd_);
+    status = NcUtil::ncSetNonBlocking(m_sd_);
     if (status != NC_OK) 
     {
         LOG_ERROR("set nonblock on s %d for server '%.*s' failed: %s", 
@@ -239,7 +239,7 @@ rstatus_t NcServerConn::connect()
 
     if ((server->m_name_).c_str()[0] != '/') 
     {
-        status = NcUtil::nc_set_tcpnodelay(m_sd_);
+        status = NcUtil::ncSetTcpNodelay(m_sd_);
         if (status != NC_OK) 
         {
             LOG_WARN("set tcpnodelay on s %d for server '%.*s' failed, ignored: %s",

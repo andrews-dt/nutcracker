@@ -19,7 +19,7 @@
 #define NC_LOG_MAX          LLOG_PVERB
 #define NC_LOG_PATH         "/dev/stdout"
 
-#define STATS_ADDR          "0.0.0.0"
+#define STATS_ADDR          "0.0.0.0" 
 #define STATS_PORT          22222
 #define STATS_INTERVAL      (30 * 1000) /* in msec */
 
@@ -143,7 +143,7 @@ static rstatus_t ncGetOptions(int argc, char **argv, NcInstance *nci)
                 LOG_ERROR("nutcracker: option -s requires a number");
                 return NC_ERROR;
             }
-            if (!NcUtil::nc_valid_port(value)) 
+            if (!NcUtil::ncValidPort(value)) 
             {
                 LOG_ERROR("nutcracker: option -s value %d is not a valid port", value);
                 return NC_ERROR;
@@ -364,6 +364,7 @@ int main(int argc, char **argv)
     {
         if (!ncTestConf(&nci)) 
         {
+            LOG_ERROR("test conf error!!!");
             exit(1);
         }
         exit(0);
@@ -383,7 +384,6 @@ int main(int argc, char **argv)
             nci.ctx.push_back(ctx);
         }
 
-        // 监听，循环处理
         for (;;) 
         {
             status = nci.loop();

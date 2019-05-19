@@ -50,13 +50,13 @@ public:
     uint8_t     color;     /* red | black */
 };
 
-class NcRBTree
+class NcRbTree
 {
 public:
-    NcRBTree() : m_root_(NULL), m_sentinel_(NULL)
+    NcRbTree() : m_root_(NULL), m_sentinel_(NULL)
     { }
 
-    NcRBTree(rbnode *node)
+    NcRbTree(rbnode *node)
     {
         rbtree_black(node); // 根节点是黑色节点
         m_root_ = node;

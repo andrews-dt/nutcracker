@@ -72,46 +72,52 @@ private:
     int m_nerror_;
 };
 
-#define LOG_ERROR(...) do {                                                 \
-    if (NcLogger::getInstance().logAble(LLOG_ALERT) != 0) {                 \
-        NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
-    }                                                                       \
-} while (0)
+#define LOG_ERROR(...) do                           \
+    {                                                                           \
+        if (NcLogger::getInstance().logAble(LLOG_ALERT) != 0) {                 \
+            NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
+        }                                                                       \
+    } while (0)
 
-#define LOG_WARN(...) do {                                                  \
-    if (NcLogger::getInstance().logAble(LLOG_WARN) != 0) {                  \
-        NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
-    }                                                                       \
-} while (0)
+#define LOG_WARN(...) do                            \
+    {                                                                           \
+        if (NcLogger::getInstance().logAble(LLOG_WARN) != 0) {                  \
+            NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
+        }                                                                       \
+    } while (0)
 
-#define LOG_PANIC(...) do {                                                 \
-    if (NcLogger::getInstance().logAble(LLOG_EMERG) != 0) {                 \
-        NcLogger::getInstance()._log(__FILE__, __LINE__, 1, __VA_ARGS__);   \
-    }                                                                       \
-} while (0)
+#define LOG_PANIC(...) do                           \
+    {                                                                           \
+        if (NcLogger::getInstance().logAble(LLOG_EMERG) != 0) {                 \
+            NcLogger::getInstance()._log(__FILE__, __LINE__, 1, __VA_ARGS__);   \
+        }                                                                       \
+    } while (0)
 
-#define LOG_DEBUG(...) do {                                                 \
-    if (NcLogger::getInstance().logAble(LLOG_VVVERB) != 0) {                \
-        NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
-    }                                                                       \
-} while (0)
+#define LOG_DEBUG(...) do                           \
+    {                                                                           \
+        if (NcLogger::getInstance().logAble(LLOG_VVVERB) != 0) {                \
+            NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
+        }                                                                       \
+    } while (0)
 
-#define LOG_VERBOSE(...) do {                                               \
-    if (NcLogger::getInstance().logAble(LLOG_PVERB) != 0) {               \
-        NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
-    }                                                                       \
-} while (0)
+#define LOG_VERBOSE(...) do                         \
+    {                                                                           \
+        if (NcLogger::getInstance().logAble(LLOG_PVERB) != 0) {                 \
+            NcLogger::getInstance()._log(__FILE__, __LINE__, 0, __VA_ARGS__);   \
+        }                                                                       \
+    } while (0)
 
-#define LOGA(...) do {                                               \
-    if (NcLogger::getInstance().logAble(LLOG_PVERB) != 0) {               \
-        NcLogger::getInstance()._loga(__VA_ARGS__);   \
-    }                                                                       \
-} while (0)
+#define LOGA(...) do                                \
+    {                                                                       \
+        if (NcLogger::getInstance().logAble(LLOG_PVERB) != 0) {             \
+            NcLogger::getInstance()._loga(__VA_ARGS__);                     \
+        }                                                                   \
+    } while (0)
 
-#define FUNCTION_INTO(cls)   LOG_DEBUG("\033[32mrun into %s:%s \033[0m", #cls, __FUNCTION__)
+#define FUNCTION_INTO(cls)  LOG_DEBUG("\033[32mrun into %s:%s \033[0m", #cls, __FUNCTION__)
 
-#define FUNCTION_OUT(cls)    LOG_DEBUG("\033[34mrun out %s:%s \033[0m", #cls, __FUNCTION__)
+#define FUNCTION_OUT(cls)   LOG_DEBUG("\033[34mrun out %s:%s \033[0m", #cls, __FUNCTION__)
 
-#define ASSERT(exp)       assert((exp))
+#define ASSERT(exp)         assert((exp))
 
 #endif

@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv)
 {
-    NcRBTree tree;
+    NcRbTree tree;
 
     return 0;
 }

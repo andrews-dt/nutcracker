@@ -27,9 +27,9 @@ extern "C" int _nc_atoi(uint8_t *line, size_t n)
     return value;
 }
 
-extern "C" void * _nc_alloc(size_t size, const char *name, int line)
+extern "C" void* _nc_alloc(size_t size, const char *name, int line)
 {
-    void *p;
+    void* p;
 
     p = malloc(size);
     if (p == NULL) 
@@ -44,9 +44,9 @@ extern "C" void * _nc_alloc(size_t size, const char *name, int line)
     return p;
 }
 
-extern "C" void * _nc_zalloc(size_t size, const char *name, int line)
+extern "C" void* _nc_zalloc(size_t size, const char *name, int line)
 {
-    void *p;
+    void* p;
 
     p = _nc_alloc(size, name, line);
     if (p != NULL) 
@@ -57,14 +57,14 @@ extern "C" void * _nc_zalloc(size_t size, const char *name, int line)
     return p;
 }
 
-extern "C" void * _nc_calloc(size_t nmemb, size_t size, const char *name, int line)
+extern "C" void* _nc_calloc(size_t nmemb, size_t size, const char *name, int line)
 {
     return _nc_zalloc(nmemb * size, name, line);
 }
 
-extern "C" void * _nc_realloc(void *ptr, size_t size, const char *name, int line)
+extern "C" void* _nc_realloc(void* ptr, size_t size, const char *name, int line)
 {
-    void *p;
+    void* p;
 
     p = realloc(ptr, size);
     if (p == NULL) 
@@ -79,7 +79,7 @@ extern "C" void * _nc_realloc(void *ptr, size_t size, const char *name, int line
     return p;
 }
 
-extern "C" void _nc_free(void *ptr, const char *name, int line)
+extern "C" void _nc_free(void* ptr, const char *name, int line)
 {
     LOG_DEBUG("free(%p) @ %s:%d", ptr, name, line);
     free(ptr);
@@ -90,7 +90,6 @@ extern "C" int _vscnprintf(char *buf, size_t size, const char *fmt, va_list args
     int n;
 
     n = vsnprintf(buf, size, fmt, args);
-
     if (n <= 0) 
     {
         return 0;
@@ -104,7 +103,7 @@ extern "C" int _vscnprintf(char *buf, size_t size, const char *fmt, va_list args
     return (int)(size - 1);
 }
 
-extern "C" int _scnprintf(char *buf, size_t size, const char *fmt, ...)
+extern "C" int _scnprintf(char* buf, size_t size, const char* fmt, ...)
 {
     va_list args;
     int n;
@@ -120,9 +119,9 @@ extern "C" ssize_t _nc_sendn(int sd, const void *vptr, size_t n)
 {
     size_t nleft;
     ssize_t	nsend;
-    const char *ptr;
+    const char* ptr;
 
-    ptr = (const char *)vptr;
+    ptr = (const char*)vptr;
     nleft = n;
     while (nleft > 0) 
     {
@@ -148,11 +147,11 @@ extern "C" ssize_t _nc_sendn(int sd, const void *vptr, size_t n)
     return (ssize_t)n;
 }
 
-extern "C" ssize_t _nc_recvn(int sd, void *vptr, size_t n)
+extern "C" ssize_t _nc_recvn(int sd, void* vptr, size_t n)
 {
 	size_t nleft;
 	ssize_t	nrecv;
-	char *ptr;
+	char* ptr;
 
 	ptr = (char *)vptr;
 	nleft = n;

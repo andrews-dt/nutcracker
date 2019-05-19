@@ -61,7 +61,7 @@ rstatus_t NcConfListen::parse(NcString &value)
 
         LOG_DEBUG("port : %s, portlen : %d", _port, _portlen);
         port = nc_atoi(_port, _portlen);
-        if (port < 0 || !NcUtil::nc_valid_port(port)) 
+        if (port < 0 || !NcUtil::ncValidPort(port)) 
         {
             LOG_ERROR("has an invalid port in \"hostname:port\" format string");
             return NC_ERROR;
@@ -72,7 +72,7 @@ rstatus_t NcConfListen::parse(NcString &value)
     pname = value;
     name = NcString(_name, _namelen);
     LOG_DEBUG("name : %s, port : %d", name.c_str(), port);
-    rstatus_t status = NcUtil::nc_resolve(&name, port, &info);
+    rstatus_t status = NcUtil::ncResolve(&name, port, &info);
     if (status != NC_OK) 
     {
         return NC_ERROR;
@@ -165,7 +165,7 @@ rstatus_t NcConfServer::parse(NcString &value)
 
         LOG_DEBUG("port : %s, portlen : %d", _port, _portlen);
         port = nc_atoi(_port, _portlen);
-        if (port < 0 || !NcUtil::nc_valid_port(port)) 
+        if (port < 0 || !NcUtil::ncValidPort(port)) 
         {
             LOG_ERROR("has an invalid port in \"hostname:port\" format string");
             return NC_ERROR;
@@ -184,7 +184,7 @@ rstatus_t NcConfServer::parse(NcString &value)
     pname = value;
     name = NcString(_name, _namelen);
     LOG_DEBUG("name : %s, port : %d", name.c_str(), port);
-    rstatus_t status = NcUtil::nc_resolve(&name, port, &info);
+    rstatus_t status = NcUtil::ncResolve(&name, port, &info);
     if (status != NC_OK) 
     {
         return NC_ERROR;

@@ -60,9 +60,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <netinet/in.h>
-
 #include <queue>
-
 #include <nc_event.h>
 #include <nc_log.h>
 #include <nc_string.h>
@@ -79,10 +77,9 @@ class NcMsgBase;
 
 typedef enum
 {
-    kPROTOCOL_UNKOWN,
+    kPROTOCOL_HTTP,
     kPROTOCOL_REDIS,
     kPROTOCOL_MEMCACHED,
-    kPROTOCOL_HTTP,
     kPROTOCOL_MYSQL,
 } NcProtocolType;
 
@@ -176,10 +173,10 @@ public:
     unsigned        pidfile;                     /* pid file created? */
 
     NcSignal        *signal;
-    NcConf          conf;                        // 配置文件
+    NcConf          conf;                       // 配置文件
 
     NcEventBase     evb;                        /* event base */
-    NcRBTree        tmo_rbe;                    // 红黑树
+    NcRbTree        tmo_rbe;                    // 红黑树
 
     int             timeout;                    // 超时的timeout
 };
@@ -211,7 +208,7 @@ public:
         return instance->evb;
     }
 
-    inline NcRBTree& getRBTree()
+    inline NcRbTree& getRBTree()
     {
         return instance->tmo_rbe;
     }
@@ -245,11 +242,11 @@ public:
         m_id_ = NcUtil::uniqNextId();
         m_peer_ = NULL;
         m_mlen_ = 0; 
-        m_start_ts_ = NcUtil::nc_usec_now();
+        m_start_ts_ = NcUtil::ncUsecNow();
         pos = NULL;
 
         m_err_ = 0;
-        m_type_ = kPROTOCOL_UNKOWN;
+        m_type_ = kPROTOCOL_HTTP;
     }
 
     inline void setProtocolType(NcProtocolType type)
