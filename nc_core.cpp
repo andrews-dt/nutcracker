@@ -6,6 +6,7 @@
 #include <nc_client.h>
 #include <nc_proxy.h>
 
+// 创建proxy
 rstatus_t NcContext::createProxyConn()
 {
     NcProxyConn *conn = (NcProxyConn*)p_pool.alloc<NcProxyConn>();
@@ -22,7 +23,7 @@ rstatus_t NcContext::createProxyConn()
     NcServerPool *pool = (NcServerPool*)server_pool;
     ASSERT(pool != NULL);
     LOG_DEBUG("conn %d listening on '%s' and '%s'", conn->m_sd_, 
-              pool->addrstr.c_str(), pool->name.c_str());
+        pool->addrstr.c_str(), pool->name.c_str());
 
     return NC_OK;
 }
@@ -85,10 +86,10 @@ NcContext* NcInstance::createContext(NcConfPool *_pool)
     _ctx->server_pool = new NcServerPool(_ctx);
     _ctx->instance = this;
     NcUtil::ncMbufChunkSize(mbuf_chunk_size);
-
-    // 通过配置文件初始化，TODO：默认使用第一个配置
+    
     ((NcServerPool*)(_ctx->server_pool))->setConf(_pool);
 
+    // 计算连接数
     rstatus_t status = _ctx->calcConnections();
     if (status != NC_OK)
     {

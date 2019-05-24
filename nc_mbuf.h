@@ -59,6 +59,11 @@ public:
         nc_free(m_data_);
     }
 
+    inline void reset()
+    {
+        rewind();
+    }
+
     inline bool empty()
     { 
         return m_pos_ == m_last_ ? true : false;

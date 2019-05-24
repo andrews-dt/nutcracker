@@ -2,6 +2,9 @@
 
 rstatus_t NcHashKit::random_update(NcServerPool *pool)
 {
+    #define RANDOM_CONTINUUM_ADDITION   10  /* # extra slots to build into continuum */
+    #define RANDOM_POINTS_PER_SERVER    1
+
     int64_t now = NcUtil::ncUsecNow();
 
     if (now < 0)
@@ -96,6 +99,9 @@ rstatus_t NcHashKit::random_update(NcServerPool *pool)
 
 rstatus_t NcHashKit::modula_update(NcServerPool *pool)
 {
+    #define MODULA_CONTINUUM_ADDITION   10  /* # extra slots to build into continuum */
+    #define MODULA_POINTS_PER_SERVER    1
+
     int64_t now = NcUtil::ncUsecNow();
 
     if (now < 0)

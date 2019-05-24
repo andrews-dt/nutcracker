@@ -81,6 +81,9 @@ public:
 
         m_rmsg_ = NULL;
         m_smsg_ = NULL;
+
+        m_imsg_q_.clear();
+        m_omsg_q_.clear();
     }
 
     rstatus_t recvChain(NcMsgBase *msg);
@@ -92,10 +95,7 @@ public:
 
     virtual rstatus_t sendMsg();
 
-    virtual void* getContext()
-    {
-        return NULL;
-    }
+    virtual void* getContext() = 0;
 
     virtual int callback(uint32_t events);
     
@@ -118,21 +118,19 @@ public:
     { }
 
     // 其他处理
-    virtual NcMsgBase* recvNext(bool alloc)
+    virtual NcMsgBase* recvNext(bool alloc) = 0;
+
+    virtual void recvDone(NcMsgBase *msg1, NcMsgBase *msg2) = 0;
+
+    virtual NcMsgBase* sendNext() = 0;
+
+    virtual void sendDone(NcMsgBase *msg) = 0;
+
+    // 判断是否要鉴权
+    bool authenticated()
     {
-        return NULL;
+        return false;
     }
-
-    virtual void recvDone(NcMsgBase *msg1, NcMsgBase *msg2)
-    { }
-
-    virtual NcMsgBase* sendNext()
-    {
-        return NULL;
-    }
-
-    virtual void sendDone(NcMsgBase *msg)
-    { }
 
     inline int timeout()
     {
@@ -156,11 +154,6 @@ public:
 
     // 释放msg
     void freeMsg(NcMsgBase *msg, bool force = true);
-
-    // 处理请求
-    bool requestDone(NcMsgBase *msg);
-
-    bool requestError(NcMsgBase *msg);
 
 public:
     void                *m_owner_;          /* connection owner - server_pool / server */

@@ -2,21 +2,6 @@
 #include <nc_message.h>
 #include <nc_hashkit.h>
 
-NcContext* NcServer::getContext()
-{
-    if (m_server_pool_ == NULL)
-    {
-        return NULL;
-    }
-
-    return m_server_pool_->ctx;
-}
-
-NcServerPool* NcServer::getServerPool()
-{
-    return m_server_pool_;
-}
-
 NcConn* NcServer::getConn()
 {
     if (m_server_pool_ == NULL)
@@ -44,7 +29,98 @@ NcConn* NcServer::getConn()
     return (NcConn*)conn;
 }
 
-rstatus_t NcServerPool::hashUpdate()
+void NcServer::failure()
+{
+    NcServerPool *pool = m_server_pool_;
+    int64_t now, next;
+    rstatus_t status;
+
+    // TODO :
+    if (!pool->auto_eject_hosts) 
+    {
+        return;
+    }
+
+    m_failure_count_++;
+
+    LOG_DEBUG("server '%.*s' failure count %"PRIu32" limit %"PRIu32,
+              server->pname.len, server->pname.data, server->failure_count,
+              pool->server_failure_limit);
+
+    if (m_failure_count_ < pool->server_failure_limit) 
+    {
+        LOG_DEBUG("failure count(%d) > failure limit(%d)", 
+            m_failure_count_, pool->server_failure_limit);
+        return;
+    }
+
+    now = nc_usec_now();
+    if (now < 0) 
+    {
+        return;
+    }
+
+    next = now + pool->server_retry_timeout;
+
+    LOG_DEBUG("update pool %" PRIu32 " '%.*s' to delete server '%.*s' "
+        "for next %" PRIu32 " secs", pool->idx, pool->name.len,
+        pool->name.data, server->pname.len, server->pname.data,
+        pool->server_retry_timeout / 1000 / 1000);
+    m_failure_count_ = 0;
+    m_next_retry_ = next;
+
+    status = pool->update();
+    if (status != NC_OK) 
+    {
+        LOG_ERROR("updating pool %"PRIu32" '%.*s' failed: %s", pool->idx,
+            pool->name.len, pool->name.data, strerror(errno));
+    }
+}
+
+void NcServerPool::setConf(NcConfPool *_pool)
+{
+    FUNCTION_INTO(NcServerPool);
+
+    nlive_server = 0;
+    next_rebuild = 0LL;
+
+    name = _pool->name;
+    addrstr = _pool->listen.pname;
+    port = (uint16_t)_pool->listen.port;
+    nc_memcpy(&info, &_pool->listen.info, sizeof(_pool->listen.info));
+    perm = _pool->listen.perm;
+
+    LOG_DEBUG("info.family : %d, addstr : %s, port : %d", 
+        info.family, addrstr.c_str(), port);
+
+    tcpkeepalive = _pool->tcpkeepalive ? 1 : 0;
+    timeout = _pool->timeout;
+    backlog = _pool->backlog;
+
+    client_connections = (uint32_t)_pool->client_connections;
+    server_connections = (uint32_t)_pool->server_connections;
+    server_retry_timeout = (int64_t)_pool->server_retry_timeout * 1000LL;
+    server_failure_limit = (uint32_t)_pool->server_failure_limit;
+
+    for (uint32_t i = 0; i < _pool->server.size(); i++)
+    {
+        NcServer *ns = new NcServer(this);
+        ns->setConf((_pool->server)[i]);
+        server.push_back(ns);
+    }
+}
+
+NcConn* NcServerPool::getConn(uint8_t *key, uint32_t keylen)
+{
+    FUNCTION_INTO(NcServerPool);
+
+    uint32_t idx = index(key, keylen);
+    LOG_DEBUG("server.size() : %d, idx : %d", server.size(), idx);
+    NcServer* s = server[idx % server.size()];
+    return s->getConn();
+}
+
+rstatus_t NcServerPool::update()
 {
     FUNCTION_INTO(NcServerPool);
 
@@ -62,7 +138,7 @@ rstatus_t NcServerPool::hashUpdate()
     return NC_ERROR;
 }
 
-uint32_t NcServerPool::hashIndex(uint8_t *key, uint32_t keylen)
+uint32_t NcServerPool::index(uint8_t *key, uint32_t keylen)
 {
     FUNCTION_INTO(NcServerPool);
 
@@ -119,6 +195,7 @@ uint32_t NcServerPool::hashIndex(uint8_t *key, uint32_t keylen)
 void NcServerConn::ref(void *owner)
 {
     NcServer *server = (NcServer*)owner;
+    ASSERT(server != NULL);
 
     rstatus_t status = NcUtil::ncResolve(&server->m_addrstr_, server->m_port_, &server->m_info_);
     if (status != NC_OK) 
@@ -137,12 +214,13 @@ void NcServerConn::ref(void *owner)
 
     m_owner_ = owner;
     LOG_DEBUG("ref conn %p owner %p into '%.*s", this, server,
-              server->m_pname_.length(), server->m_pname_.c_str());
+        server->m_pname_.length(), server->m_pname_.c_str());
 }
 
 void NcServerConn::unref()
 {
     NcServer *server = (NcServer*)m_owner_;
+    ASSERT(server != NULL);
     m_owner_ = NULL;
 
     server->m_ns_conn_q_--;
@@ -157,6 +235,12 @@ bool NcServerConn::active()
     FUNCTION_INTO(NcServerConn);
 
     if (!m_imsg_q_.empty())
+    {
+        LOG_DEBUG("s %d is active", m_sd_);
+        return true;
+    }
+
+    if (!m_omsg_q_.empty())
     {
         LOG_DEBUG("s %d is active", m_sd_);
         return true;
@@ -180,6 +264,8 @@ bool NcServerConn::active()
 
 void NcServerConn::close()
 {
+    FUNCTION_INTO(NcServerConn);
+
     return ;
 }
 
@@ -188,18 +274,10 @@ rstatus_t NcServerConn::connect()
     FUNCTION_INTO(NcServerConn);
 
     NcServer *server = (NcServer*)m_owner_;
-    if (server == NULL)
-    {
-        LOG_ERROR("server is NULL");
-        return NC_ERROR;
-    }
+    ASSERT(server != NULL);
 
     NcContext *ctx = server->getContext();
-    if (ctx == NULL)
-    {
-        LOG_ERROR("ctx is NULL");
-        return NC_ERROR;
-    }
+    ASSERT(ctx != NULL);
 
     if (m_err_) 
     {
@@ -433,10 +511,7 @@ void NcServerConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
 void* NcServerConn::getContext()
 {
     NcServer *server = (NcServer*)m_owner_;
-    if (server == NULL)
-    {
-        return NULL;
-    }
+    ASSERT(server != NULL);
 
     return server->getContext();
 }

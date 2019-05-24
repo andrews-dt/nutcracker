@@ -9,6 +9,7 @@ void NcClientConn::ref(void *owner)
 
     m_owner_ = owner;
     NcServerPool *pool = (NcServerPool*)m_owner_;
+    ASSERT(pool != NULL);
 
     m_family_ = 0;
     m_addrlen_ = 0;
@@ -25,6 +26,7 @@ void NcClientConn::unref()
     FUNCTION_INTO(NcClientConn);
 
     NcServerPool *pool = (NcServerPool*)m_owner_;
+    ASSERT(pool != NULL);
     m_owner_ = NULL;
     if (pool->nc_conn_q <= 0)
     {
@@ -41,7 +43,7 @@ bool NcClientConn::active()
 {
     FUNCTION_INTO(NcClientConn);
 
-    if (!m_imsg_q_.empty())
+    if (!m_omsg_q_.empty())
     {
         LOG_DEBUG("c %d is active", m_sd_);
         return true;
@@ -72,7 +74,7 @@ void NcClientConn::close()
 
     if (m_sd_ < 0)
     {
-        unref();
+        this->unref();
         (ctx->c_pool).free(this);
         return ;
     }
@@ -82,8 +84,8 @@ void NcClientConn::close()
     {
         m_rmsg_ = NULL;
         LOG_DEBUG("close c %d discarding pending req %" PRIu64 " len "
-                  "%" PRIu32 " type %d", m_sd_, msg->m_id_, msg->m_mlen_,
-                  msg->m_type_);
+            "%" PRIu32 " type %d", m_sd_, msg->m_id_, msg->m_mlen_,
+            msg->m_type_);
         freeMsg(msg);
     }
 
@@ -113,7 +115,7 @@ void NcClientConn::close()
         }
     }
 
-    unref();
+    this->unref();
     
     rstatus_t status = ::close(m_sd_);
     if (status < 0)
@@ -140,7 +142,7 @@ NcMsgBase* NcClientConn::recvNext(bool alloc)
         {
             m_rmsg_ = NULL;
             LOG_ERROR("eof c %d discarding incomplete rsp %" PRIu64 " len "
-                      "%" PRIu32 "", m_sd_, msg->m_id_, msg->m_mlen_);
+                "%" PRIu32 "", m_sd_, msg->m_id_, msg->m_mlen_);
             freeMsg(msg);
         }
         /*
@@ -196,6 +198,7 @@ void NcClientConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
     m_rmsg_ = rmsg;
     if (((NcMsg*)cmsg)->requestFilter(this))
     {
+        LOG_DEBUG("request filter");
         return ;
     }
 
@@ -231,14 +234,17 @@ void NcClientConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
         return ;
     }
 
-    // TODO ：处理
-    // rstatus_t status = (ctx->getEvb()).addOutput(this);
-    // if (status != NC_OK) 
-    // {
-    //     m_err_ = errno;
-    // }
+    status = ((NcMsg*)cmsg)->requestMakeReply(this);
+    if (status != NC_OK) 
+    {
+        if (!cmsg->m_noreply_) 
+        {
+            this->enqueueOutput(cmsg);
+        }
+        ((NcMsg*)cmsg)->requestForwardError(this);
+    }
 
-    return ;
+    return;
 }
 
 NcMsgBase* NcClientConn::sendNext()
@@ -311,17 +317,10 @@ void NcClientConn::sendDone(NcMsgBase *msg)
 void* NcClientConn::getContext()
 {
     NcServerPool *pool = (NcServerPool*)m_owner_;
-    if (pool == NULL)
-    {
-        return NULL;
-    }
+    ASSERT(pool != NULL);
 
     NcContext *ctx = pool->ctx;
-    if (ctx == NULL)
-    {
-        LOG_ERROR("ctx is NULL");
-        return NULL;
-    }
+    ASSERT(ctx != NULL);
 
     return ctx;
 }

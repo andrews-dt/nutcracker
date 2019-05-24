@@ -291,6 +291,8 @@ rstatus_t NcConn::sendChain(NcMsgBase *msg)
         }
     }
 
+    LOG_DEBUG("size : %d, nsend : %d", send_msgq.size(), nsend);
+
     m_smsg_ = NULL;
     if (!send_msgq.empty() && nsend != 0)
     {
@@ -394,14 +396,4 @@ void NcConn::freeMsg(NcMsgBase *msg, bool force)
 
     ((NcMsg*)msg)->freeMbuf(ctx);
     (ctx->msg_pool).free(msg);   
-}
-
-bool NcConn::requestDone(NcMsgBase *msg)
-{
-    return true;
-}
-
-bool NcConn::requestError(NcMsgBase *msg)
-{
-    return true;
 }

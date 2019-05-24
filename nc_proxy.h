@@ -17,6 +17,23 @@ public:
 
     virtual void* getContext();
 
+    // 其他处理
+    virtual NcMsgBase* recvNext(bool alloc)
+    {
+        return NULL;
+    }
+
+    virtual void recvDone(NcMsgBase *msg1, NcMsgBase *msg2)
+    { }
+
+    virtual NcMsgBase* sendNext()
+    {
+        return NULL;
+    }
+
+    virtual void sendDone(NcMsgBase *msg)
+    { }
+
     rstatus_t reuse();
     rstatus_t listen();
     rstatus_t accept();

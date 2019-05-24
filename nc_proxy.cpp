@@ -47,8 +47,9 @@ void NcProxyConn::close()
     FUNCTION_INTO(NcProxyConn);
 
     NcContext *ctx = (NcContext*)getContext();
+    ASSERT(ctx != NULL);
 
-    unref();
+    this->unref();
 
     if (m_sd_ < 0)
     {
@@ -95,12 +96,11 @@ rstatus_t NcProxyConn::sendMsg()
 void* NcProxyConn::getContext()
 {
     NcServerPool *pool = (NcServerPool*)m_owner_;
-    if (pool == NULL)
-    {
-        return NULL;
-    }
+    ASSERT(pool != NULL);
 
     NcContext *ctx = pool->ctx;
+    ASSERT(ctx != NULL);
+
     return ctx;
 }
 
@@ -137,7 +137,9 @@ rstatus_t NcProxyConn::listen()
     FUNCTION_INTO(NcProxyConn);
 
     NcServerPool *pool = (NcServerPool *)m_owner_;
+    ASSERT(pool != NULL);
     NcContext *ctx = pool->ctx;
+    ASSERT(ctx != NULL);
 
     LOG_DEBUG("m_family_ : %d", m_family_);
     m_sd_ = ::socket(m_family_, SOCK_STREAM, 0);
@@ -178,9 +180,7 @@ rstatus_t NcProxyConn::listen()
     }
 
     status = ::listen(m_sd_, pool->backlog);
-
     LOG_DEBUG("backlog : %d, status : %d, m_sd_ : %d", pool->backlog, status, m_sd_);
-
     if (status < 0) 
     {
         LOG_ERROR("listen on p %d on addr '%.*s' failed: %s", m_sd_, 
@@ -201,7 +201,6 @@ rstatus_t NcProxyConn::listen()
     status = (ctx->getEvb()).addConn(this);
     if (status < 0) 
     {
-        FUNCTION_OUT(NcProxyConn);
         LOG_ERROR("event add conn p %d on addr '%.*s' failed: %s",
             m_sd_, pool->addrstr.length(), pool->addrstr.c_str(),
             strerror(errno));
@@ -211,14 +210,11 @@ rstatus_t NcProxyConn::listen()
     status = (ctx->getEvb()).delOutput(this);
     if (status < 0) 
     {
-        FUNCTION_OUT(NcProxyConn);
         LOG_ERROR("event del out p %d on addr '%.*s' failed: %s",
             m_sd_, pool->addrstr.length(), pool->addrstr.c_str(),
             strerror(errno));
         return NC_ERROR;
     }
-
-    FUNCTION_OUT(NcProxyConn);
 
     return NC_OK;
 }
@@ -234,6 +230,7 @@ rstatus_t NcProxyConn::accept()
 
     for (;;) 
     {
+        LOG_DEBUG("accept md : %d", m_sd_);
         sd = ::accept(m_sd_, NULL, NULL);
         if (sd < 0) 
         {
@@ -265,7 +262,6 @@ rstatus_t NcProxyConn::accept()
             }
 
             LOG_ERROR("accept on p %d failed: %s", m_sd_, strerror(errno));
-
             return NC_ERROR;
         }
         

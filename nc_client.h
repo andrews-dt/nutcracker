@@ -14,14 +14,12 @@ public:
     virtual void enqueueOutput(NcMsgBase *msg)
     {
         FUNCTION_INTO(NcClientConn);
-
         m_omsg_q_.push(msg);
     }
 
     virtual void dequeueOutput(NcMsgBase *msg)
     {
         FUNCTION_INTO(NcClientConn);
-        
         m_omsg_q_.remove(msg);
     }
 

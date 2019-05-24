@@ -299,7 +299,7 @@ void NcMsg::requestForwardError(NcConn* conn)
     }
 
     NcMsg* nmsg = (NcMsg*)(conn->m_omsg_q_).front();
-    if (conn->requestDone(nmsg)) 
+    if (nmsg->requestDone(conn)) 
     {
         rstatus_t status = (ctx->getEvb()).addOutput(conn);
         if (status != NC_OK) 

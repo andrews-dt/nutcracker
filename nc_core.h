@@ -114,6 +114,7 @@ public:
         {
             o = m_queue_.front();
             m_queue_.pop();
+            o->reset();
         }
         else
         {

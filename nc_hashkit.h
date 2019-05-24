@@ -4,6 +4,30 @@
 #include <nc_util.h>
 #include <nc_server.h>
 
+typedef enum 
+{
+    kHASH_ONE_AT_A_TIME     = 0x1,
+    kHASH_MD5               = 0x2,
+    kHASH_CRC16             = 0x3,
+    kHASH_CRC32             = 0x4,
+    kHASH_CRC32A            = 0x5,
+    kHASH_FNV1_64           = 0x6,
+    kHASH_FNV1A_64          = 0x7,
+    kHASH_FNV1_32           = 0x8,
+    kHASH_FNV1A_32          = 0x9,
+    kHASH_HSIEH             = 0xa,
+    kHASH_MURMUR            = 0xb,
+    kHASH_JENKINS           = 0xc,
+} HashType;
+
+// 使用的分布式一致性方法
+typedef enum 
+{
+    kDIST_KETAMA            = 0x100,
+    kDIST_MODULA            = 0x200,
+    kDIST_RANDOM            = 0x300,
+} HashDistType;
+
 typedef unsigned int MD5_u32plus;
 
 /*
@@ -270,7 +294,7 @@ private:
 class NcHashUtil
 {
 public:
-    uint32_t crc16_hash(const char *key, size_t key_length)
+    uint32_t crc16Hash(const char *key, size_t key_length)
     {
         static uint16_t crc16tab[256] = {
             0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -317,7 +341,7 @@ public:
         return crc;
     }
 
-    uint32_t crc32_hash(const char *key, size_t key_length)
+    uint32_t crc32Hash(const char *key, size_t key_length)
     {
         static const uint32_t crc32tab[256] = {
             0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
@@ -396,7 +420,7 @@ public:
         return ((~crc) >> 16) & 0x7fff;
     }
     
-    uint32_t crc32a_hash(const char *key, size_t key_length)
+    uint32_t crc32aHash(const char *key, size_t key_length)
     {
         static const uint32_t crc32tab[256] = {
             0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
@@ -477,7 +501,7 @@ public:
         return crc ^ ~0U;
     }
 
-    uint32_t fnv164_hash(const char *key, size_t key_length)
+    uint32_t fnv164Hash(const char *key, size_t key_length)
     {
         static uint64_t FNV_64_INIT = UINT64_C(0xcbf29ce484222325);
         static uint64_t FNV_64_PRIME = UINT64_C(0x100000001b3);
@@ -492,7 +516,7 @@ public:
         return (uint32_t)hash;
     }
 
-    uint32_t fnv164a_hash(const char *key, size_t key_length)
+    uint32_t fnv164aHash(const char *key, size_t key_length)
     {
         static uint64_t FNV_64_INIT = UINT64_C(0xcbf29ce484222325);
         static uint64_t FNV_64_PRIME = UINT64_C(0x100000001b3);
@@ -508,7 +532,7 @@ public:
         return (uint32_t)hash;
     }
 
-    uint32_t fnv132_hash(const char *key, size_t key_length)
+    uint32_t fnv132Hash(const char *key, size_t key_length)
     {
         static uint32_t FNV_32_INIT = 2166136261UL;
         static uint32_t FNV_32_PRIME = 16777619;
@@ -524,7 +548,7 @@ public:
         return (uint32_t)hash;
     }
 
-    uint32_t fnv132a_hash(const char *key, size_t key_length)
+    uint32_t fnv132aHash(const char *key, size_t key_length)
     {
         static uint32_t FNV_32_INIT = 2166136261UL;
         static uint32_t FNV_32_PRIME = 16777619;
@@ -540,7 +564,7 @@ public:
         return (uint32_t)hash;
     }
 
-    uint32_t hsieh_hash(const char *key, size_t key_length)
+    uint32_t hsiehHash(const char *key, size_t key_length)
     {
         #undef get16bits
         #if (defined(__GNUC__) && defined(__i386__))
@@ -609,7 +633,7 @@ public:
         return hash;
     }
 
-    uint32_t jenkins_hash(const char *key, size_t key_length)
+    uint32_t jenkinsHash(const char *key, size_t key_length)
     {
         #define hashsize(n) ((uint32_t)1<<(n))
         #define hashmask(n) (hashsize(n)-1)
@@ -793,7 +817,7 @@ public:
         return c;
     }
 
-    uint32_t murmur_hash(const char *key, size_t key_length)
+    uint32_t murmurHash(const char *key, size_t key_length)
     {
         /*
         * 'm' and 'r' are mixing constants generated offline.  They're not
@@ -847,7 +871,7 @@ public:
         return h;
     }
 
-    uint32_t one_at_a_time_hash(const char *key, size_t key_length)
+    uint32_t one_at_a_timeHash(const char *key, size_t key_length)
     {
         const char *ptr = key;
         uint32_t value = 0;
@@ -866,7 +890,7 @@ public:
         return value;
     }
 
-    uint32_t md5_hash(const char *key, size_t key_length)
+    uint32_t md5Hash(const char *key, size_t key_length)
     {
         unsigned char results[16];
         NcMd5 md5;
@@ -880,93 +904,63 @@ public:
     }
 };
 
-typedef enum 
-{
-    kHASH_ONE_AT_A_TIME     = 0x1,
-    kHASH_MD5               = 0x2,
-    kHASH_CRC16             = 0x3,
-    kHASH_CRC32             = 0x4,
-    kHASH_CRC32A            = 0x5,
-    kHASH_FNV1_64           = 0x6,
-    kHASH_FNV1A_64          = 0x7,
-    kHASH_FNV1_32           = 0x8,
-    kHASH_FNV1A_32          = 0x9,
-    kHASH_HSIEH             = 0xa,
-    kHASH_MURMUR            = 0xb,
-    kHASH_JENKINS           = 0xc,
-} HashType;
-
-// 使用的分布式一致性方法
-typedef enum 
-{
-    kDIST_KETAMA            = 0x100,
-    kDIST_MODULA            = 0x200,
-    kDIST_RANDOM            = 0x300,
-} DistType;
-
-#define RANDOM_CONTINUUM_ADDITION   10  /* # extra slots to build into continuum */
-#define RANDOM_POINTS_PER_SERVER    1
-
-#define MODULA_CONTINUUM_ADDITION   10  /* # extra slots to build into continuum */
-#define MODULA_POINTS_PER_SERVER    1
-
 class NcHashKit
 {
 public:
     static uint32_t hash(int type, const char *key, size_t key_length)
     {
-        static NcHashUtil h;
+        static NcHashUtil util;
 
-        uint32_t hashv;
+        uint32_t hashv = 0;
 
         switch (type)
         {
         case kHASH_ONE_AT_A_TIME: 
-            hashv = h.one_at_a_time_hash(key, key_length); 
+            hashv = util.one_at_a_timeHash(key, key_length); 
             break;
 
         case kHASH_MD5: 
-            hashv = h.md5_hash(key, key_length); 
+            hashv = util.md5Hash(key, key_length); 
             break;
 
         case kHASH_CRC16: 
-            hashv = h.crc16_hash(key, key_length); 
+            hashv = util.crc16Hash(key, key_length); 
             break;
 
         case kHASH_CRC32: 
-            hashv = h.crc32_hash(key, key_length); 
+            hashv = util.crc32Hash(key, key_length); 
             break;
 
         case kHASH_CRC32A: 
-            hashv = h.crc32a_hash(key, key_length); 
+            hashv = util.crc32aHash(key, key_length); 
             break;
 
         case kHASH_FNV1_64: 
-            hashv = h.fnv164_hash(key, key_length); 
+            hashv = util.fnv164Hash(key, key_length); 
             break;
 
         case kHASH_FNV1A_64: 
-            hashv = h.fnv164a_hash(key, key_length); 
+            hashv = util.fnv164aHash(key, key_length); 
             break;
 
         case kHASH_FNV1_32: 
-            hashv = h.fnv132_hash(key, key_length); 
+            hashv = util.fnv132Hash(key, key_length); 
             break;
 
         case kHASH_FNV1A_32: 
-            hashv = h.fnv132a_hash(key, key_length); 
+            hashv = util.fnv132aHash(key, key_length); 
             break;
 
         case kHASH_HSIEH: 
-            hashv = h.hsieh_hash(key, key_length); 
+            hashv = util.hsiehHash(key, key_length); 
             break;
 
         case kHASH_MURMUR: 
-            hashv = h.murmur_hash(key, key_length); 
+            hashv = util.murmurHash(key, key_length); 
             break;
 
         case kHASH_JENKINS: 
-            hashv = h.jenkins_hash(key, key_length); 
+            hashv = util.jenkinsHash(key, key_length); 
             break;
             
         default: 
@@ -980,7 +974,6 @@ public:
 
     inline static uint32_t random_dispatch(NcContinuum *continuum, uint32_t ncontinuum, uint32_t hash)
     {
-        // return continuum[random() % ncontinuum].index;
         return 0;
     }
 
@@ -988,7 +981,7 @@ public:
 
     inline static uint32_t modula_dispatch(NcContinuum *continuum, uint32_t ncontinuum, uint32_t hash)
     {
-        return continuum[hash % ncontinuum].index;
+        return 0;
     }
 };
 

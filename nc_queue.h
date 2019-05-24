@@ -838,6 +838,11 @@ public:
         return m_list_.end();
     }
 
+    inline void clear()
+    {
+        m_list_.clear();
+    }
+
 private:
     std::list<ValType> m_list_;
 };
