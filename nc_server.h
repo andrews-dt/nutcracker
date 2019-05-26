@@ -64,7 +64,19 @@ public:
     NcServerPool(NcContext *_ctx)
     {
         ctx = _ctx;
-        ncontinuum = 1;
+    }
+
+    ~NcServerPool()
+    {
+        for (uint32_t i = 0; i < server.size(); i++)
+        {
+            nc_delete(server[i]);
+        }
+
+        for (uint32_t i = 0; i < server.size(); i++)
+        {
+            nc_delete(continuum[i]);
+        }
     }
 
     // 通过conf获取配置信息
@@ -75,7 +87,7 @@ public:
         ctx = _ctx;
     }
 
-    rstatus_t update();
+    inline rstatus_t update();
 
     uint32_t index(uint8_t *key, uint32_t keylen);
 
@@ -113,9 +125,8 @@ public:
     unsigned           auto_eject_hosts;     /* auto_eject_hosts? */
     unsigned           preconnect;           /* preconnect? */
 
-    uint32_t           ncontinuum;           /* # continuum points */
     uint32_t           nserver_continuum;    /* # servers - live and dead on continuum (const) */
-    NcContinuum        *continuum;
+    std::vector<NcContinuum*>   continuum;
 };
 
 class NcServer 
@@ -175,6 +186,10 @@ public:
     {
         m_weight_ = weight;
     }
+
+    void failure();
+
+    rstatus_t preconnect();
 
 private:
     NcServerPool    *m_server_pool_;

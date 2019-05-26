@@ -27,6 +27,7 @@ void NcClientConn::unref()
 
     NcServerPool *pool = (NcServerPool*)m_owner_;
     ASSERT(pool != NULL);
+    
     m_owner_ = NULL;
     if (pool->nc_conn_q <= 0)
     {

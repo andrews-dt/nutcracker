@@ -314,7 +314,7 @@ static rstatus_t ncInit(NcInstance *nci)
     }
 
     struct utsname name;
-    status = uname(&name);
+    status = ::uname(&name);
     if (status < 0) 
     {
         LOGA("nutcracker-%s started on pid %d", NC_VERSION_STRING, nci->pid);
@@ -372,8 +372,11 @@ int main(int argc, char **argv)
 
     status = ncInit(&nci);
     if (status == NC_OK) 
-    {
+    { 
         LOG_DEBUG("pool size:%d", nci.conf.pool.size());
+        // 打印解析的数据
+        nci.conf.dump();
+
         for (int i = 0; i < nci.conf.pool.size(); i++)
         {
             NcContext *ctx = nci.createContext(nci.conf.pool[i]);

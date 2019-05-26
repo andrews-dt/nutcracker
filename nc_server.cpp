@@ -32,10 +32,11 @@ NcConn* NcServer::getConn()
 void NcServer::failure()
 {
     NcServerPool *pool = m_server_pool_;
+    ASSERT(pool != NULL);
+
     int64_t now, next;
     rstatus_t status;
 
-    // TODO :
     if (!pool->auto_eject_hosts) 
     {
         return;
@@ -43,9 +44,8 @@ void NcServer::failure()
 
     m_failure_count_++;
 
-    LOG_DEBUG("server '%.*s' failure count %"PRIu32" limit %"PRIu32,
-              server->pname.len, server->pname.data, server->failure_count,
-              pool->server_failure_limit);
+    LOG_DEBUG("server '%.*s' failure count %" PRIu32,
+        m_pname_.length(), m_pname_.c_str(), m_failure_count_);
 
     if (m_failure_count_ < pool->server_failure_limit) 
     {
@@ -54,17 +54,18 @@ void NcServer::failure()
         return;
     }
 
-    now = nc_usec_now();
+    now = NcUtil::ncUsecNow();
     if (now < 0) 
     {
+        LOG_DEBUG("now %d < 0", now);
         return;
     }
 
     next = now + pool->server_retry_timeout;
 
     LOG_DEBUG("update pool %" PRIu32 " '%.*s' to delete server '%.*s' "
-        "for next %" PRIu32 " secs", pool->idx, pool->name.len,
-        pool->name.data, server->pname.len, server->pname.data,
+        "for next %" PRIu32 " secs", pool->idx, pool->name.length(),
+        pool->name.c_str(), m_pname_.length(), m_pname_.c_str(),
         pool->server_retry_timeout / 1000 / 1000);
     m_failure_count_ = 0;
     m_next_retry_ = next;
@@ -73,8 +74,27 @@ void NcServer::failure()
     if (status != NC_OK) 
     {
         LOG_ERROR("updating pool %"PRIu32" '%.*s' failed: %s", pool->idx,
-            pool->name.len, pool->name.data, strerror(errno));
+            pool->name.length(), pool->name.c_str(), strerror(errno));
     }
+}
+
+rstatus_t NcServer::preconnect()
+{
+    NcConn *conn = getConn();
+    if (conn == NULL)
+    {
+        return NC_ENOMEM;
+    }
+
+    rstatus_t status = ((NcServerConn*)conn)->connect();
+    if (status != NC_OK)
+    {
+        LOG_WARN("connect to server '%.*s' failed, ignored: %s",
+            m_pname_.length(), m_pname_.c_str(), strerror(errno));
+        conn->close();
+    }
+
+    return NC_OK;
 }
 
 void NcServerPool::setConf(NcConfPool *_pool)
@@ -122,20 +142,7 @@ NcConn* NcServerPool::getConn(uint8_t *key, uint32_t keylen)
 
 rstatus_t NcServerPool::update()
 {
-    FUNCTION_INTO(NcServerPool);
-
-    switch (dist_type) 
-    {
-    case kDIST_MODULA:
-        return NcHashKit::modula_update(this);
-
-    // 默认使用随机
-    case kDIST_RANDOM:
-    default:
-        return NcHashKit::random_update(this);
-    }
-
-    return NC_ERROR;
+    return NcHashKit::update(this);
 }
 
 uint32_t NcServerPool::index(uint8_t *key, uint32_t keylen)
@@ -171,25 +178,11 @@ uint32_t NcServerPool::index(uint8_t *key, uint32_t keylen)
         hashv = 0;
     }
 
+    // 计算hash值
     hashv = NcHashKit::hash(key_hash_type, (char*)key, keylen);
+    LOG_DEBUG("hashv : %d", hashv);
 
-    LOG_DEBUG("hashv : %d, ncontinuum : %d", hashv, ncontinuum);
- 
-    uint32_t idx = 0;
-    switch (dist_type) 
-    {
-    case kDIST_MODULA:
-        idx = NcHashKit::modula_dispatch(continuum, ncontinuum, hashv); 
-        break;
-
-    // 默认使用随机
-    case kDIST_RANDOM:
-    default:
-        idx = NcHashKit::random_dispatch(continuum, ncontinuum, 0); 
-        break;
-    }
-
-    return idx;
+    return NcHashKit::dispatch(this, hashv);
 }
 
 void NcServerConn::ref(void *owner)
@@ -265,6 +258,8 @@ bool NcServerConn::active()
 void NcServerConn::close()
 {
     FUNCTION_INTO(NcServerConn);
+
+    // TODO :
 
     return ;
 }
@@ -455,6 +450,8 @@ NcMsgBase* NcServerConn::recvNext(bool alloc)
     NcContext *ctx = (NcContext*)getContext();
     ASSERT(ctx != NULL);
 
+    LOG_DEBUG("[1]conn : %p, m_rmsg_ : %p", this, m_rmsg_);
+
     NcMsg *msg = (NcMsg*)m_rmsg_;
     if (m_eof_)
     {
@@ -488,12 +485,16 @@ NcMsgBase* NcServerConn::recvNext(bool alloc)
         m_rmsg_ = msg;
     }
 
+    LOG_DEBUG("[2]conn : %p, m_rmsg_ : %p", this, m_rmsg_);
+
     return msg;
 }
 
 void NcServerConn::recvDone(NcMsgBase *cmsg, NcMsgBase *rmsg)
 {
     FUNCTION_INTO(NcServerConn);
+    
+    LOG_DEBUG("conn : %p, rmsg : %p", this, rmsg);
     
     m_rmsg_ = rmsg;
     NcMsg *msg = (NcMsg*)cmsg;

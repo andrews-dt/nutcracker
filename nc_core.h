@@ -114,7 +114,6 @@ public:
         {
             o = m_queue_.front();
             m_queue_.pop();
-            o->reset();
         }
         else
         {
@@ -132,6 +131,7 @@ public:
             return ;
         }
         
+        o->reset();
         m_queue_.push(o);
         m_free_++;
     }

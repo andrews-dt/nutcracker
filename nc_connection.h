@@ -84,6 +84,8 @@ public:
 
         m_imsg_q_.clear();
         m_omsg_q_.clear();
+
+        FUNCTION_OUT(NcConn);
     }
 
     rstatus_t recvChain(NcMsgBase *msg);

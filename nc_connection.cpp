@@ -49,17 +49,7 @@ void NcConn::processClose()
     FUNCTION_INTO(NcConn);
 
     NcContext *ctx = (NcContext*)(this->getContext());
-
-    char *addrstr;
-
-    if (m_conn_type_ == NC_CLIENT) 
-    {
-        addrstr = NcUtil::ncUnResolvePeerDesc(m_sd_);
-    } 
-    else 
-    {
-        addrstr = NcUtil::ncUnresolveAddr(m_addr_, m_addrlen_);
-    }
+    ASSERT(ctx != NULL);
 
     LOG_DEBUG("close %d", m_sd_);
 

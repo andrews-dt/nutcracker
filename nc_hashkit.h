@@ -970,17 +970,20 @@ public:
         return hashv;
     }
 
-    static rstatus_t random_update(NcServerPool *pool);
+    static rstatus_t update(NcServerPool *pool);
 
-    inline static uint32_t random_dispatch(NcContinuum *continuum, uint32_t ncontinuum, uint32_t hash)
+    inline static uint32_t dispatch(NcServerPool *pool, uint32_t hashv)
     {
-        return 0;
-    }
+        ASSERT(pool != NULL);
 
-    static rstatus_t modula_update(NcServerPool *pool);
+        int ncontinuum = pool->continuum.size();
+        switch (pool->dist_type)
+        {
+        case kDIST_RANDOM:
+            NcContinuum *c = pool->continuum[random() % ncontinuum];
+            return c->index;
+        }
 
-    inline static uint32_t modula_dispatch(NcContinuum *continuum, uint32_t ncontinuum, uint32_t hash)
-    {
         return 0;
     }
 };

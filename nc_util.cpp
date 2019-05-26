@@ -35,10 +35,6 @@ extern "C" void* _nc_alloc(size_t size, const char *name, int line)
     if (p == NULL) 
     {
         LOG_ERROR("malloc(%zu) failed @ %s:%d", size, name, line);
-    } 
-    else 
-    {
-        LOG_DEBUG("malloc(%zu) at %p @ %s:%d", size, p, name, line);
     }
 
     return p;
@@ -46,7 +42,7 @@ extern "C" void* _nc_alloc(size_t size, const char *name, int line)
 
 extern "C" void* _nc_zalloc(size_t size, const char *name, int line)
 {
-    void* p;
+    void *p;
 
     p = _nc_alloc(size, name, line);
     if (p != NULL) 

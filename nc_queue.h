@@ -798,19 +798,21 @@ public:
         return m_list_.back();
     }
 
+    // 插入到最后
     inline void push(const ValType &v)
     {
-        m_list_.push_back(v); // 插入到最后
+        m_list_.push_back(v);
     }
 
+    // 弹出最前一个
     inline void pop()
     {
-        m_list_.pop_front(); // 弹出最前一个
+        m_list_.pop_front();
     }
 
     inline void pop_back()
     {
-        m_list_.pop_back(); // 弹出最后一个
+        m_list_.pop_back();
     }
 
     inline void remove(const ValType &v)

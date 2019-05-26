@@ -77,7 +77,7 @@ rstatus_t NcMsg::parse(NcConn* conn)
 {
     FUNCTION_INTO(NcMsg);
 
-    LOG_DEBUG("m_mbuf_queue_ size : %d", m_mbuf_queue_.size());
+    LOG_DEBUG("[this=%p]m_mbuf_queue_ size : %d", this, m_mbuf_queue_.size());
 
     rstatus_t status = NC_OK;
 
@@ -88,10 +88,14 @@ rstatus_t NcMsg::parse(NcConn* conn)
     }
 
     // TODO : 测试，默认解析完成
-    // conn->m_eof_ = 1;
-    m_result_ = kMSG_PARSE_OK;
-    NcMbuf *mbuf = m_mbuf_queue_.back();
-    pos = mbuf->getLast();
+    static int testi = 0;
+    if (testi >= 0)
+    {
+        m_result_ = kMSG_PARSE_OK;
+        NcMbuf *mbuf = m_mbuf_queue_.back();
+        pos = mbuf->getLast();
+    }
+    testi++;
 
     switch (m_result_)
     {
@@ -131,6 +135,7 @@ rstatus_t NcMsg::parseDone(NcConn* conn)
         return NC_ENOMEM;
     }
 
+    LOG_DEBUG("mbuf : %p, pos : %p, last : %p", mbuf, pos, mbuf->getLast());
     if (pos == mbuf->getLast()) 
     {
         conn->recvDone(this, NULL);
