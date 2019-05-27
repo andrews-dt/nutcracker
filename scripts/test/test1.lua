@@ -12,3 +12,16 @@ function test(s, n)
     print(s)
     print(n)
 end
+
+function norm(x)
+    return x^2 + y^2
+end
+
+function twice()
+    return 2 * x
+end
+
+a = {}
+a["k"] = 1
+a[1] = 2
+print(a)
